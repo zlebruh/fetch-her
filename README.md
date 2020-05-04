@@ -1,6 +1,4 @@
 # fetch-her
-
-# time-sched
 Simple data fetching service for REST APIs
 
 ## Purpose
