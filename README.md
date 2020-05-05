@@ -63,12 +63,33 @@ const myCollections = {
 };
 ```
 
+### Optional fetchOptions object
+**NOTE:** This is the `default` object. It's what FetchService uses if you **don't** provide your own
+```javascript
+const DEFAULT_OPTIONS = {
+  mode: 'cors', // no-cors, cors, *same-origin
+  // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+  // credentials: 'same-origin', // include, *same-origin, omit
+  headers: {
+    'content-type': 'application/json',
+    accept: 'application/json',
+    SameSite: 'None',
+    Secure: 'true',
+  },
+  redirect: 'follow', // manual, *follow, error
+  referrer: 'no-referrer', // no-referrer, *client
+};
+
+const fetchService = new FetchService(myCollections, DEFAULT_OPTIONS);
+```
+
 ### Actual usage
 ```javascript
 const fetchService = new FetchService(myCollections);
+// OR
+// const fetchService = new FetchService(myCollections, you_custom_options_object);
 
 // Now, let's observe
-
 const d1 = await fetchService.GetData('employees'); // {status: "success", data: Array(24)}
 const d2 = await fetchService.GetData('employee', {text: '1'}); // {message: "Oops! someting issue found to fetch record.", error: 1, data: null}
 
