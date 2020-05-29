@@ -1,3 +1,10 @@
+if (global && global.process) {
+  const { fetch } = require('whatwg-fetch');
+  global.fetch = fetch;
+}
+
+const GLOBAL = window || global;
+
 function cloneData(data) {
   try {
     return JSON.parse(JSON.stringify(data));
@@ -15,9 +22,10 @@ function produceError(err) {
     data: null,
   };
 } 
+
 async function fetchData(path, ops = {}) {
   try {
-    const res = await fetch(path, ops);
+    const res = await GLOBAL.fetch(path, ops);
     const data = await res.json();
 
     return res.status === 200
