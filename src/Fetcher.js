@@ -55,13 +55,13 @@ class Fetcher {
         method,
         ...this.OPTIONS,
       };
+
+      url += collection.noTransform
+        ? bodyObj.text
+        : utils.transformOptions(bodyObj);
   
       switch (method) {
         case 'GET':
-          url += collection.noTransform
-            ? bodyObj.text
-            : utils.transformOptions(bodyObj);
-  
           ops = { ...options };
           break;
         case 'POST':
