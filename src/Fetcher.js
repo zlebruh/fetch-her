@@ -40,7 +40,7 @@ class Fetcher {
     }
   
     const bodyObj = { ...collection.props, ...props };
-    const body = JSON.stringify(bodyObj);
+    let body = JSON.stringify(bodyObj);
     const match = this.REQUESTS[name];
     if (!match || match.body !== body) {
       const method = collection.method; // eslint-disable-line
@@ -64,6 +64,7 @@ class Fetcher {
         case 'GET':
           ops = { ...options };
           break;
+        case 'PUT':
         case 'POST':
         case 'PATCH':
         case 'DELETE':
@@ -74,6 +75,10 @@ class Fetcher {
               body: props.formData,
             };
           } else {
+            if (collection.noTransform) {
+              delete bodyObj.text;
+              body = JSON.stringify(bodyObj);
+            }
             ops = { ...options, body };
           }
           break;

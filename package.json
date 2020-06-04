@@ -1,6 +1,6 @@
 {
   "name": "fetch-her",
-  "version": "0.0.1e",
+  "version": "0.0.1f",
   "description": "Simple data fetching service for REST APIs",
   "main": "index.js",
   "scripts": {
