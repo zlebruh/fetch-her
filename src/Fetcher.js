@@ -39,7 +39,7 @@ class Fetcher {
       return this.requestMultiple(collection.collections, props);
     }
   
-    const bodyObj = { ...collection.props, ...props };
+    let bodyObj = { ...collection.props, ...props };
     let body = JSON.stringify(bodyObj);
     const match = this.REQUESTS[name];
     if (!match || match.body !== body) {
@@ -56,12 +56,22 @@ class Fetcher {
         ...this.OPTIONS,
       };
 
-      url += collection.noTransform
-        ? bodyObj.text
-        : utils.transformOptions(bodyObj);
+      const KEY = '@path';
+      const urlParam = props[KEY];
+      if (utils.is(urlParam)) {
+        if (utils.isString(urlParam, true)) {
+          url += urlParam;
+          delete props[KEY];
+        } else {
+          return Promise.reject(new Error(`Property "${KEY}" must be a non-empty string`));
+        }
+      }
+      bodyObj = { ...props };
+      body = JSON.stringify(bodyObj);
   
       switch (method) {
         case 'GET':
+          url += utils.transformOptions(bodyObj);
           ops = { ...options };
           break;
         case 'PUT':
@@ -75,10 +85,7 @@ class Fetcher {
               body: props.formData,
             };
           } else {
-            if (collection.noTransform) {
-              delete bodyObj.text;
-              body = JSON.stringify(bodyObj);
-            }
+            body = JSON.stringify(bodyObj);
             ops = { ...options, body };
           }
           break;
@@ -100,10 +107,11 @@ class Fetcher {
   getDataGrunt(name, props = {}) {
     const collection = this.COLLECTIONS[name];
     if (utils.isObject(collection, true)) {
+      const KEY = '@refresh';
       const useCache = !!(collection.cache && this.CACHE[name]);
       const reqOptions = { ...props };
-      const useRefresh = !!(reqOptions && reqOptions._refresh);
-      delete reqOptions._refresh;
+      const useRefresh = !!(reqOptions && reqOptions[KEY] === true);
+      delete reqOptions[KEY];
   
       return useCache && !useRefresh
         ? this.serveCache(name)

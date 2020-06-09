@@ -22,7 +22,6 @@ const myCollections = {
   employee: {
     url: 'http://dummy.restapiexample.com/api/v1/employee/',
     method: 'GET',
-    noTransform: true,
   },
   create: {
     url: 'http://dummy.restapiexample.com/api/v1/create',
@@ -42,7 +41,6 @@ const myCollections = {
   doThingA: {
     url: '/do_thing_a',
     method: 'POST',
-    noTransform: true,
   },
 
   // You can also upload files
@@ -99,11 +97,23 @@ const d3 = await fetchService.GetData('employees');
 
 // Refresh cache
 // The following will cause a new request and will (provided there are no errors) refresh the cache itself
-const d4 = await fetchService.GetData('employees', {_refresh: true});
+const d4 = await fetchService.GetData('employees', {
+  '@refresh': true,
+  prop1: 'bla',
+  prop2: ['blah'],
+  ...more_props,
+});
+
+// Collection URL postfix
+// The value of the `@path` property will be used as a postfix to your `collection.url`
+const d5 = await fetchService.GetData('employee', {
+  '@path': 'user_id_or_whatever',
+  ...more_props,
+});
 
 // Aggregation
 // You get a list your collections and their respective results
-const d5 = await fetchService.GetData('allInfo');
+const d6 = await fetchService.GetData('allInfo');
 
 const d1000 = await fetchService.GetData('some_collection', {we: 'have', many: 'params'});
 ```

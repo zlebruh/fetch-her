@@ -9,27 +9,18 @@ const COLLECTIONS = {
   employee: {
     url: 'http://dummy.restapiexample.com/api/v1/employee/',
     method: 'GET',
-    noTransform: true,
   },
   create: {
     url: 'http://dummy.restapiexample.com/api/v1/create',
     method: 'POST',
   },
   update: {
-    url: 'http://dummy.restapiexample.com/api/v1/update/21',
+    url: 'http://dummy.restapiexample.com/api/v1/update/',
     method: 'PUT',
   },
   delete: {
-    url: 'http://dummy.restapiexample.com/api/v1/delete/2',
+    url: 'http://dummy.restapiexample.com/api/v1/delete/',
     method: 'DELETE',
-  },
-  // Skip transformation of params and use your custom string instead.
-  // NOTE: You must use {text: 'Your_string_here'} for this to work
-  // Example: await dataService.GetData('aboutStuff', {text: 'oh/yeah/215'})
-  doThingA: {
-    url: '/do_thing_a',
-    method: 'POST',
-    noTransform: true,
   },
 
   // You can also upload files
@@ -99,4 +90,21 @@ test('Use combined collection', async () => {
 test('Use BROKEN HOST collection', async () => {
   const request = await fetchService.GetData('broken');
   expect(request.data).toEqual(null);
+});
+
+// SPECIAL DIRECTIVES
+test('Use @path correctly', async () => {
+  const request = await fetchService.GetData('employee', {
+    '@path': 'user_id_15',
+    more: {props: 'here'},
+  });
+  expect(request.message).toEqual('Oops! someting issue found to fetch record.');
+  expect(request.data).toEqual(null)
+});
+test('Use @path in a BROKEN way', async () => {
+  const request = await fetchService.GetData('employee', {
+    '@path': ['user_id_15'],
+    more: {props: 'here'},
+  });
+  expect(request.message).toEqual('Property "@path" must be a non-empty string');
 });

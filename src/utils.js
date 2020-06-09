@@ -49,6 +49,26 @@ function transformCollectionProps(collections = [], data) {
     return result;
   }, {});
 }
+
+/**
+ * Checking for the existing of things. NOTE: null is considered non-existing by this method
+ * @param val
+ * @returns {boolean}
+ */
+function is(val) {
+  return val !== undefined && val !== null;
+}
+
+/**
+ * @param {String} str
+ * @param {Boolean} [checkEmpty] - optional
+ * @returns {boolean}
+ */
+function isString(str, checkEmpty = false) {
+  const isString = typeof str === 'string';
+  return !checkEmpty ? isString : isString && !!str.length;
+}
+
 /**
 * @param {*} val
 * @param {Boolean} [checkEmpty] - optional check whether the object has any values
@@ -81,11 +101,13 @@ function transformOptions(options = {}) {
 }
 
 module.exports = {
+  is,
+  isString,
+  isObject,
   cloneData,
   produceError,
   fetchData,
   buildHeaders,
   transformCollectionProps,
-  isObject,
   transformOptions,
 };
