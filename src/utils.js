@@ -1,8 +1,3 @@
-if (global && global.process) {
-  const { fetch } = require('whatwg-fetch');
-  global.fetch = fetch;
-}
-
 const GLOBAL = window || global;
 
 function cloneData(data) {
@@ -25,7 +20,7 @@ function produceError(err) {
 
 async function fetchData(path, ops = {}) {
   try {
-    const res = await GLOBAL.fetch(path, ops);
+    const res = await fetch(path, ops);
     const data = await res.json();
 
     return res.status === 200
@@ -34,12 +29,6 @@ async function fetchData(path, ops = {}) {
   } catch (err) {
     return produceError(err);
   }
-}
-// TODO::: FIX THIS SHIT. MUST BE CONFIGURABLE
-function buildHeaders(a, b) {
-  const token = localStorage.Bearer || '';
-  const auth = { Authorization: `Bearer ${token}` };
-  return { ...a.headers, ...b.headers, ...auth };
 }
 
 function transformCollectionProps(collections = [], data) {
@@ -107,7 +96,6 @@ module.exports = {
   cloneData,
   produceError,
   fetchData,
-  buildHeaders,
   transformCollectionProps,
   transformOptions,
 };

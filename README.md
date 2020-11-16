@@ -1,8 +1,9 @@
 # fetch-her
 Simple data fetching service for REST APIs
+Now, with a bit saner JWT Bearer implementation.
 
 ## Purpose
-I built this tool for my own needs. It's far from perfect but it's been serving me well over a handful of projects with different depth and requirements. JWT Bearer implementation looking into localStorage.Bearer. Sue me.
+I built this tool for my own needs. It's far from perfect but it's been serving me well over a handful of projects with different depth and requirements.
 
 ## Usage
 
@@ -78,7 +79,16 @@ const DEFAULT_OPTIONS = {
   referrer: 'no-referrer', // no-referrer, *client
 };
 
-const fetchService = new FetchService(myCollections, DEFAULT_OPTIONS);
+/**
+ * @param {Object} myCollections
+ * @param {Object} myCollections
+ * @param {Object} myCollections
+*/
+
+// @param {Object} myCollections
+// @param {Object} DEFAULT_OPTIONS
+// @param {string} [token] - optional truish value used as your Bearer token in the headers
+const fetchService = new FetchService(myCollections, DEFAULT_OPTIONS, token);
 ```
 
 ### Actual usage
@@ -118,5 +128,32 @@ const d6 = await fetchService.GetData('allInfo');
 const d1000 = await fetchService.GetData('some_collection', {we: 'have', many: 'params'});
 ```
 
-## TBD
-As mentioned above, current JWT implementation kind of sucks and is hardcoded. The plan is to fix it as soon as I find the time.
+## JWT
+```javascript
+// Change/Enable Bearer header
+fetchService.changeJwtBearer('your-bearer-token');
+
+// Disable variants
+// Do NOT use truish values to disable it
+fetchService.changeJwtBearer('');
+fetchService.changeJwtBearer(false);
+fetchService.changeJwtBearer(null);
+```
+
+## Changing headers
+```javascript
+fetchService.changeFetchOptions({
+  headers: {no: 'more', bs: 'here', you: 'hearme'}
+  // ...otherFetchOptions,
+});
+```
+
+## Important note about fetch
+You are expected to have `fetch` in your global context.
+Personally, I'd go for something like this
+
+```javascript
+require('whatwg-fetch');
+// or
+import 'whatwg-fetch');
+```
