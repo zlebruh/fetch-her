@@ -12,4 +12,4 @@ const DEFAULT_OPTIONS = {
   // referrer: 'no-referrer', // no-referrer, *client
 };
 
-module.exports = DEFAULT_OPTIONS;
+export default DEFAULT_OPTIONS;
