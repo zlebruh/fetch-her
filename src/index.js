@@ -29,20 +29,17 @@ export const Setup = (props = {}) => {
   return Object.assign(META, carrier)
 };
 
-export const GetData = (name, props = {}) => {
-  if (!utils.isObject(META.COLLECTIONS, true)) {
-    return utils.produceError({message: `There is no 'collections' object. Use 'Setup()' to change your props at any time`});
-  }
-
-  const hash = fetchStore.hash(name, JSON.stringify(props));
-  return getDataGrunt(name, hash, props).catch(utils.produceError);
+export const GetData = async (name, props = {}) => {
+  return utils.isObject(META.COLLECTIONS, true)
+    ? getDataGrunt(name, props).catch(utils.produceError)
+    : utils.produceError({ message: "There is no 'collections' object. Use 'Setup()' to change your props" });
 };
 
 
 // ############################### LOCAL ###############################
 const processResponse = (name, hash, response) => {
   fetchStore.reqRemove(hash);
-  
+
   if (!response || response.error) return response;
 
   const collection = META.COLLECTIONS[name];
@@ -54,14 +51,9 @@ const processResponse = (name, hash, response) => {
   return response;
 }
 
-// ############### REQUEST ##############
 const requestData = (properties) => {
-  const {
-    name,
-    hash,
-    props,
-    collection,
-  } = properties;
+  const { name, hash, props } = properties;
+  const collection = META.COLLECTIONS[name];
 
   // There are collections that combine multiple collections
   if (collection.collections) return requestMultiple(collection.collections, props);
@@ -70,7 +62,7 @@ const requestData = (properties) => {
   const existing = fetchStore.reqHas(hash);
   if (existing) return existing;
 
-  const method = collection.method; // eslint-disable-line
+  const { method } = collection;
   if (!method) {
     return Promise.reject(new Error(`Collection '${name}' has no method`));
   }
@@ -124,29 +116,22 @@ const requestData = (properties) => {
   return promise;
 };
 
-const getDataGrunt = (name, hash, props = {}) => {
-  const collection = META.COLLECTIONS[name];
-  if (utils.isObject(collection, true)) {
+const getDataGrunt = (name, props = {}) => {
+  if (utils.isObject(META.COLLECTIONS[name], true)) {
     const KEY = '@refresh';
-    fetchStore.hash(name, JSON.stringify(props));
-    const useCache = !!(collection.cache && fetchStore.cacheHas(hash));
-    const reqOptions = { ...props };
-    const useRefresh = !!(reqOptions && reqOptions[KEY] === true);
+    const txtProps = JSON.stringify(props);
+    const reqOptions = JSON.parse(txtProps);
+    const hash = `${name}+++${txtProps}`;
+    const useCache = !!(fetchStore.cacheHas(hash) && reqOptions[KEY] !== true)
     delete reqOptions[KEY];
 
-    return useCache && !useRefresh
+    return useCache
       ? Promise.resolve(utils.cloneData(fetchStore.cacheHas(hash)))
-      : requestData({
-        name,
-        hash,
-        collection,
-        props: reqOptions,
-      });
+      : requestData({ name, hash, props: reqOptions });
   }
 
   return Promise.reject(new Error(`Collection '${name}' was not recognized`));
 };
-
 
 const fetchCollections = (collections = [], props = {}) => (
   collections.map((item) => {

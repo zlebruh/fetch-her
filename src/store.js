@@ -27,6 +27,3 @@ export const reqRemove = (hash) => remove(REQUESTS, hash);
 export const cacheHas = (hash) => CACHE[hash] || null;
 export const cacheAdd = (hash, data) => add(CACHE, hash, data);
 export const cacheRemove = (hash) => remove(CACHE, hash);
-
-// Other
-export const hash = (name, body) => `${name}+++${body}`;
