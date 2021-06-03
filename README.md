@@ -6,10 +6,12 @@ Now, with a bit saner JWT Bearer implementation.
 I built this tool for my own needs. It's far from perfect but it's been serving me well over a handful of projects with different depth and requirements.
 
 ## Usage
-
-### Add to your project
 ```javascript
-const FetchService = require('fetch-her');
+import fetchService from 'fetch-her';
+
+fetchService.Setup({ collections: myCollections });
+
+await fetchService.GetData('employees');
 ```
 
 ### Define your collections / end-points
@@ -36,13 +38,6 @@ const myCollections = {
     url: 'http://dummy.restapiexample.com/api/v1/delete/2',
     method: 'DELETE',
   },
-  // Skip transformation of params and use your custom string instead.
-  // NOTE: You must use {text: 'Your_string_here'} for this to work
-  // Example: await dataService.GetData('aboutStuff', {text: 'oh/yeah/215'})
-  doThingA: {
-    url: '/do_thing_a',
-    method: 'POST',
-  },
 
   // You can also upload files
   uploadFile: {
@@ -62,44 +57,22 @@ const myCollections = {
 };
 ```
 
-### Optional fetchOptions object
-**NOTE:** This is the `default` object. It's what FetchService uses if you **don't** provide your own
-```javascript
-const DEFAULT_OPTIONS = {
-  mode: 'cors', // no-cors, cors, *same-origin
-  // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-  // credentials: 'same-origin', // include, *same-origin, omit
-  headers: {
-    'content-type': 'application/json',
-    accept: 'application/json',
-    SameSite: 'None',
-    Secure: 'true',
-  },
-  redirect: 'follow', // manual, *follow, error
-  referrer: 'no-referrer', // no-referrer, *client
-};
-
-/**
- * @param {Object} myCollections
- * @param {Object} myCollections
- * @param {Object} myCollections
-*/
-
-// @param {Object} myCollections
-// @param {Object} DEFAULT_OPTIONS
-// @param {string} [token] - optional truish value used as your Bearer token in the headers
-const fetchService = new FetchService(myCollections, DEFAULT_OPTIONS, token);
-```
-
 ### Actual usage
 ```javascript
-const fetchService = new FetchService(myCollections);
+import fetchService from 'fetch-her';
+
+// { collections?: Object; options?: Object; bearer?: String; }
+fetchService.Setup({ collections: myCollections });
 // OR
-// const fetchService = new FetchService(myCollections, you_custom_options_object);
+fetchService.Setup({
+  collections: myCollections,
+  options: my_custom_options_object,
+  bearer: 'HASH'
+});
 
 // Now, let's observe
 const d1 = await fetchService.GetData('employees'); // {status: "success", data: Array(24)}
-const d2 = await fetchService.GetData('employee', {text: '1'}); // {message: "Oops! someting issue found to fetch record.", error: 1, data: null}
+const d2 = await fetchService.GetData('employee', {id: '1'}); // {message: "Oops! someting issue found to fetch record.", error: 1, data: null}
 
 // Cache
 // This is the same as d1. Since collection `employees` is being cached (look at its definition up there), no second request is being initiated
@@ -128,32 +101,45 @@ const d6 = await fetchService.GetData('allInfo');
 const d1000 = await fetchService.GetData('some_collection', {we: 'have', many: 'params'});
 ```
 
-## JWT
+## Changing headers and JWT
 ```javascript
-// Change/Enable Bearer header
-fetchService.changeJwtBearer('your-bearer-token');
-
-// Disable variants
-// Do NOT use truish values to disable it
-fetchService.changeJwtBearer('');
-fetchService.changeJwtBearer(false);
-fetchService.changeJwtBearer(null);
+fetchService.Setup({
+  collections: myCollections,
+  options: { headers: { no: 'more', hanging: 'wires' } },
+  bearer: 'HASH' // or null to disable the header
+});
 ```
 
-## Changing headers
+### Optional fetchOptions object
+**NOTE:** This is the `default` object. It's what fetchService uses if you **don't** provide your own
 ```javascript
-fetchService.changeFetchOptions({
-  headers: {no: 'more', bs: 'here', you: 'hearme'}
-  // ...otherFetchOptions,
+const DEFAULT_OPTIONS = {
+  mode: 'cors', // no-cors, cors, *same-origin
+  // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+  // credentials: 'same-origin', // include, *same-origin, omit
+  headers: {
+    'content-type': 'application/json',
+    accept: 'application/json',
+    SameSite: 'None',
+    Secure: 'true',
+  },
+  redirect: 'follow', // manual, *follow, error
+  referrer: 'no-referrer', // no-referrer, *client
+};
+
+/**
+ * @param {Object} myCollections
+ * @param {Object} myCollections
+ * @param {Object} myCollections
+*/
+
+// { collections?: Object; options?: Object; bearer?: String; }
+fetchService.Setup({
+  collections: myCollections,
+  options: DEFAULT_OPTIONS,
+  bearer
 });
 ```
 
 ## Important note about fetch
 You are expected to have `fetch` in your global context.
-Personally, I'd go for something like this
-
-```javascript
-require('whatwg-fetch');
-// or
-import 'whatwg-fetch');
-```

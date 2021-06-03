@@ -2,15 +2,15 @@ import * as utils from './utils';
 import * as fetchStore from '../src/store';
 import DEFAULT_OPTIONS from '../src/defaultFetchOptions';
 
-const metaDefaults = { value: null, writable: true, enumerable: true };
-export const META = Object.defineProperties({}, {
-  BEARER: { ...metaDefaults },
+const metaDefaults = { value: {}, writable: true, enumerable: true };
+const META = Object.defineProperties({}, {
+  BEARER: { ...metaDefaults, value: null },
   OPTIONS: { ...metaDefaults },
   COLLECTIONS: { ...metaDefaults },
   auth: { get: () => (META.BEARER ? { Authorization: `Bearer ${META.BEARER}` } : {}) },
 });
 
-export const Setup = (props = {}) => {
+const Setup = (props = {}) => {
   const carrier = {};
   const { collections, options, bearer } = props;
 
@@ -29,10 +29,21 @@ export const Setup = (props = {}) => {
   return Object.assign(META, carrier)
 };
 
-export const GetData = async (name, props = {}) => {
-  return utils.isObject(META.COLLECTIONS, true)
-    ? getDataGrunt(name, props).catch(utils.produceError)
-    : utils.produceError({ message: "There is no 'collections' object. Use 'Setup()' to change your props" });
+const GetData = async (name, props = {}) => {
+  if (utils.isObject(META.COLLECTIONS[name], true)) {
+    const KEY = '@refresh';
+    const txtProps = JSON.stringify(props);
+    const reqOptions = JSON.parse(txtProps);
+    const hash = `${name}+++${txtProps}`;
+    const useCache = !!(fetchStore.cacheHas(hash) && reqOptions[KEY] !== true)
+    delete reqOptions[KEY];
+
+    return useCache
+      ? Promise.resolve(utils.cloneData(fetchStore.cacheHas(hash)))
+      : requestData({ name, hash, props: reqOptions }).catch(utils.produceError);
+  }
+
+  return utils.produceError({ message: `Collection '${name}' was not recognized` });
 };
 
 
@@ -116,23 +127,6 @@ const requestData = (properties) => {
   return promise;
 };
 
-const getDataGrunt = (name, props = {}) => {
-  if (utils.isObject(META.COLLECTIONS[name], true)) {
-    const KEY = '@refresh';
-    const txtProps = JSON.stringify(props);
-    const reqOptions = JSON.parse(txtProps);
-    const hash = `${name}+++${txtProps}`;
-    const useCache = !!(fetchStore.cacheHas(hash) && reqOptions[KEY] !== true)
-    delete reqOptions[KEY];
-
-    return useCache
-      ? Promise.resolve(utils.cloneData(fetchStore.cacheHas(hash)))
-      : requestData({ name, hash, props: reqOptions });
-  }
-
-  return Promise.reject(new Error(`Collection '${name}' was not recognized`));
-};
-
 const fetchCollections = (collections = [], props = {}) => (
   collections.map((item) => {
     const collection = item.name || item;
@@ -148,3 +142,5 @@ const requestMultiple = (collections = [], props = {}) => (
     .all(fetchCollections(collections, props))
     .then((data) => utils.transformCollectionProps(collections, data))
 );
+
+export default { Setup, GetData, META };
