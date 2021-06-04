@@ -14,6 +14,7 @@ fetchService.Setup({ collections: myCollections });
 await fetchService.GetData('employees');
 ```
 
+## Configuration
 ### Define your collections / end-points
 ```javascript
 const myCollections = {
@@ -57,7 +58,7 @@ const myCollections = {
 };
 ```
 
-### Actual usage
+## Actual usage
 ```javascript
 import fetchService from 'fetch-her';
 
@@ -110,36 +111,5 @@ fetchService.Setup({
 });
 ```
 
-### Optional fetchOptions object
-**NOTE:** This is the `default` object. It's what fetchService uses if you **don't** provide your own
-```javascript
-const DEFAULT_OPTIONS = {
-  mode: 'cors', // no-cors, cors, *same-origin
-  // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-  // credentials: 'same-origin', // include, *same-origin, omit
-  headers: {
-    'content-type': 'application/json',
-    accept: 'application/json',
-    SameSite: 'None',
-    Secure: 'true',
-  },
-  redirect: 'follow', // manual, *follow, error
-  referrer: 'no-referrer', // no-referrer, *client
-};
-
-/**
- * @param {Object} myCollections
- * @param {Object} myCollections
- * @param {Object} myCollections
-*/
-
-// { collections?: Object; options?: Object; bearer?: String; }
-fetchService.Setup({
-  collections: myCollections,
-  options: DEFAULT_OPTIONS,
-  bearer
-});
-```
-
 ## Important note about fetch
-You are expected to have `fetch` in your global context.
+You are expected to have `fetch` in your global scope.

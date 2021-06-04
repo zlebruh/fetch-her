@@ -1,6 +1,5 @@
 import * as utils from './utils';
 import * as fetchStore from '../src/store';
-import DEFAULT_OPTIONS from '../src/defaultFetchOptions';
 
 const metaDefaults = { value: {}, writable: true, enumerable: true };
 const META = Object.defineProperties({}, {
@@ -11,22 +10,21 @@ const META = Object.defineProperties({}, {
 });
 
 const Setup = (props = {}) => {
-  const carrier = {};
   const { collections, options, bearer } = props;
 
   if (utils.isObject(collections, true)) {
-    carrier.COLLECTIONS = collections;
+    META.COLLECTIONS = collections;
+  }
+  
+  if (utils.isObject(options, true)) {
+    META.OPTIONS = options;
   }
 
   if (utils.isString(bearer, true) || bearer === null) {
-    carrier.BEARER = bearer;
+    META.BEARER = bearer;
   }
 
-  if (utils.isObject(options, true) || !META.OPTIONS) {
-    carrier.OPTIONS = options || DEFAULT_OPTIONS
-  }
-
-  return Object.assign(META, carrier)
+  return META;
 };
 
 const GetData = async (name, props = {}) => {
