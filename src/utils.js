@@ -34,15 +34,6 @@ export function transformCollectionProps(collections = [], data) {
 }
 
 /**
- * Checking for the existing of things. NOTE: null is considered non-existing by this method
- * @param val
- * @returns {boolean}
- */
-export function is(val) {
-  return val !== undefined && val !== null;
-}
-
-/**
  * @param {String} str
  * @param {Boolean} [checkEmpty] - optional
  * @returns {boolean}
@@ -82,3 +73,22 @@ export function propsToCGI(options = {}) {
     return `${sum}${key}=${item + amp}`;
   }, initial);
 }
+
+/**
+ * @param {object} obj
+ * @returns {object}
+ */
+export const splitProps = (obj) => {
+  const SPECIAL = ['@path', '@refresh', '@headers']
+  const props = cloneData(obj)
+  const special = {}
+
+  for (let i = 0; i < SPECIAL.length; i += 1) {
+    const key = SPECIAL[i]
+    if (key in props) {
+      special[key] = props[key]
+      delete props[key]
+    }
+  }
+return { props, special }
+};

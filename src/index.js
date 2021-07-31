@@ -3,42 +3,40 @@ import * as fetchStore from '../src/store';
 
 const metaDefaults = { value: {}, writable: true, enumerable: true };
 const META = Object.defineProperties({}, {
-  BEARER: { ...metaDefaults, value: null },
-  OPTIONS: { ...metaDefaults },
-  COLLECTIONS: { ...metaDefaults },
-  auth: { get: () => (META.BEARER ? { Authorization: `Bearer ${META.BEARER}` } : {}) },
+  bearer: { ...metaDefaults, value: null },
+  options: { ...metaDefaults },
+  collections: { ...metaDefaults },
+  auth: { get: () => (META.bearer ? { Authorization: `Bearer ${META.bearer}` } : {}) },
 });
 
 const Setup = (props = {}) => {
   const { collections, options, bearer } = props;
 
   if (utils.isObject(collections, true)) {
-    META.COLLECTIONS = collections;
+    META.collections = collections;
   }
   
   if (utils.isObject(options, true)) {
-    META.OPTIONS = options;
+    META.options = options;
   }
 
   if (utils.isString(bearer, true) || bearer === null) {
-    META.BEARER = bearer;
+    META.bearer = bearer;
   }
 
   return META;
 };
 
-const GetData = async (name, props = {}) => {
-  if (utils.isObject(META.COLLECTIONS[name], true)) {
-    const KEY = '@refresh';
-    const txtProps = JSON.stringify(props);
-    const reqOptions = JSON.parse(txtProps);
-    const hash = `${name}+++${txtProps}`;
-    const useCache = !!(fetchStore.cacheHas(hash) && reqOptions[KEY] !== true)
-    delete reqOptions[KEY];
+const GetData = async (name, params = {}) => {
+  const collection = META.collections[name];
+  if (collection && typeof collection === 'object' && !Array.isArray(collection)) {
+    const hash = `${name}+++${JSON.stringify(params)}`
+    const { props, special } = utils.splitProps(params)
+    const useCache = !!(fetchStore.cacheHas(hash) && special['@refresh'] !== true)
 
     return useCache
       ? Promise.resolve(utils.cloneData(fetchStore.cacheHas(hash)))
-      : requestData({ name, hash, props: reqOptions }).catch(utils.produceError);
+      : requestData({ name, hash, props, special }).catch(utils.produceError);
   }
 
   return utils.produceError({ message: `Collection '${name}' was not recognized` });
@@ -51,7 +49,7 @@ const processResponse = (name, hash, response) => {
 
   if (!response || response.error) return response;
 
-  const collection = META.COLLECTIONS[name];
+  const collection = META.collections[name];
   switch (collection.cache) {
     case 'ram': fetchStore.cacheAdd(hash, response); break;
     case 'local': break;
@@ -61,8 +59,8 @@ const processResponse = (name, hash, response) => {
 }
 
 const requestData = (properties) => {
-  const { name, hash, props } = properties;
-  const collection = META.COLLECTIONS[name];
+  const { name, hash, props, special } = properties;
+  const collection = META.collections[name];
 
   // There are collections that combine multiple collections
   if (collection.collections) return requestMultiple(collection.collections, props);
@@ -79,22 +77,22 @@ const requestData = (properties) => {
   let url = String(collection.url);
   const options = {
     method,
-    ...META.OPTIONS,
+    ...META.options,
     headers: {
-      ...META.OPTIONS.headers,
+      ...META.options.headers,
+      ...special["@headers"],
       ...collection.headers,
       ...META.auth,
     },
   };
 
-  const KEY = '@path';
-  const urlParam = props[KEY];
-  if (utils.is(urlParam)) {
-    if (utils.isString(urlParam, true)) {
+  const path = '@path';
+  const urlParam = special[path];
+  if (typeof urlParam === 'string') {
+    if (urlParam.length) {
       url += urlParam;
-      delete props[KEY];
     } else {
-      return Promise.reject(new Error(`Property '${KEY}' must be a non-empty string`));
+      return Promise.reject(new Error(`Property '${path}' must be a non-empty string`));
     }
   }
 
