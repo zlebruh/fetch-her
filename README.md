@@ -22,6 +22,7 @@ const myCollections = {
     url: 'http://dummy.restapiexample.com/api/v1/employees',
     cache: 'ram', // OPTIONAL PARAMETER. 'ram' is the only accepted value at this time
     method: 'GET',
+    headers: {}, // OPTIONAL PARAMETER
   },
   employee: {
     url: 'http://dummy.restapiexample.com/api/v1/employee/',
@@ -87,6 +88,19 @@ const d4 = await fetchService.GetData('employees', {
   prop2: ['blah'],
   ...more_props,
 });
+
+// Special properties
+const mai_data = await fff.GetData('employee', {
+  // Your props - these are transform to either CGI in the URL or body payload
+  a: 1,
+  b: 2,
+  c: 3,
+  
+  // Special props - ALL ARE OPTIONAL
+  '@path': '/aaa/bbb/ccc',        // Merged into a collection's url
+  '@headers': {x: 1, y: 2, z: 3}, // Merged with headers from the global Setup object AND the headers in the collection itself
+  '@refresh': true                // Cached collection response, if any, is being ignored and a new request is being made. If successful, cache is updated
+})
 
 // Collection URL postfix
 // The value of the `@path` property will be used as a postfix to your `collection.url`
