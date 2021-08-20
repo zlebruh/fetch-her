@@ -22,11 +22,15 @@ const myCollections = {
     url: 'http://dummy.restapiexample.com/api/v1/employees',
     cache: 'ram', // OPTIONAL PARAMETER. 'ram' is the only accepted value at this time
     method: 'GET',
+    options: {}, // OPTIONAL PARAMETER
     headers: {}, // OPTIONAL PARAMETER
+    emit: (e) => (), // OPTIONAL PARAMETER - Function | String
   },
   employee: {
-    url: 'http://dummy.restapiexample.com/api/v1/employee/',
+    url: 'http://dummy.restapiexample.com/api/v1/employee/1',
     method: 'GET',
+    cache: 'ram',
+    emit: 'YOUR_CUSTOM_EVENT_NAME_HERE', // OPTIONAL PARAMETER - Function | String
   },
   create: {
     url: 'http://dummy.restapiexample.com/api/v1/create',
@@ -89,19 +93,6 @@ const d4 = await fetchService.GetData('employees', {
   ...more_props,
 });
 
-// Special properties
-const mai_data = await fff.GetData('employee', {
-  // Your props - these are transform to either CGI in the URL or body payload
-  a: 1,
-  b: 2,
-  c: 3,
-  
-  // Special props - ALL ARE OPTIONAL
-  '@path': '/aaa/bbb/ccc',        // Merged into a collection's url
-  '@headers': {x: 1, y: 2, z: 3}, // Merged with headers from the global Setup object AND the headers in the collection itself
-  '@refresh': true                // Cached collection response, if any, is being ignored and a new request is being made. If successful, cache is updated
-})
-
 // Collection URL postfix
 // The value of the `@path` property will be used as a postfix to your `collection.url`
 const d5 = await fetchService.GetData('employee', {
@@ -114,6 +105,61 @@ const d5 = await fetchService.GetData('employee', {
 const d6 = await fetchService.GetData('allInfo');
 
 const d1000 = await fetchService.GetData('some_collection', {we: 'have', many: 'params'});
+```
+
+## Emitting events on successful fetch
+```javascript
+const myCollections = {
+  employees: {
+    url: 'http://dummy.restapiexample.com/api/v1/employees',
+    method: 'GET',
+    
+    // Recevies an object with the collection's name and the response
+    // Only called after a ```successful``` fetch. Returning cache does not trigger it
+    emit: ({collection: String, response: Object}) => console.warn('Yeah...'),
+  },
+  employee: {
+    url: 'http://dummy.restapiexample.com/api/v1/employee/1',
+    method: 'GET',
+
+    // User provided string is used to dispatch a CustomEvent instance
+    // that receives ```{response: Object, collection: String}``` as its `detail`
+    // Only called after a ```successful``` fetch. Returning cache does not trigger it
+    emit: 'YOUR_STRING',
+  }
+};
+```
+
+## Special props - everything is optional
+```javascript
+
+const mai_data = await fff.GetData('employee', {
+  // Your props - these are transform to either CGI in the URL or body payload
+  a: 1,
+  b: 2,
+  c: 3,
+  
+  // Special props ARE OPTIONAL
+
+  // Two ways to replace a collection emit or add a new one just for this call
+  '@emit': (e) => (),
+  '@emit': 'FETCH_DATA',
+  
+
+  // Merged into a collection's url
+  '@path': '/aaa/bbb/ccc',
+
+  // Merged with the fetch options object.
+  // Will overwrite any matching props provided by the global options and the collection itself
+  '@options': {...},
+
+  // Merged with headers from the global Setup object AND the headers in the collection itself
+  '@headers': {x: 1, y: 2, z: 3},
+
+  // Cached collection response, if any, is being ignored and a new request is being made.
+  // If successful, any prior cache is updated
+  '@refresh': true,
+})
 ```
 
 ## Changing headers and JWT

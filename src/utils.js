@@ -1,3 +1,7 @@
+/**
+ * @param {Object} data
+ * @returns {Object}
+ */
 export function cloneData(data) {
   try {
     return JSON.parse(JSON.stringify(data));
@@ -7,12 +11,21 @@ export function cloneData(data) {
   }
 }
 
+/**
+ * @param {Error|Object} path
+ * @returns {Object}
+ */
 export function produceError(err) {
   const message = err.message || err.error || err.errors;
 
   return { message, error: 1, data: null };
 }
 
+/**
+ * @param {String} path
+ * @param {Object} ops
+ * @returns {Object}
+ */
 export async function fetchData(path, ops = {}) {
   try {
     const res = await fetch(path, ops);
@@ -26,6 +39,11 @@ export async function fetchData(path, ops = {}) {
   }
 }
 
+/**
+ * @param {Array} collections
+ * @param {Object} data
+ * @returns {Object}
+ */
 export function transformCollectionProps(collections = [], data) {
   return collections.reduce((result, collection, idx) => {
     const name = collection.name || collection;
@@ -79,8 +97,8 @@ export function propsToCGI(options = {}) {
  * @returns {object}
  */
 export const splitProps = (obj) => {
-  const SPECIAL = ['@path', '@refresh', '@headers']
-  const props = cloneData(obj)
+  const SPECIAL = ['@emit', '@path', '@refresh', '@options', '@headers']
+  const props = {...obj}
   const special = {}
 
   for (let i = 0; i < SPECIAL.length; i += 1) {
