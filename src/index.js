@@ -44,18 +44,29 @@ const GetData = async (name, params = {}) => {
 
 
 // ############################### LOCAL ###############################
-const processResponse = (name, hash, response) => {
+const processResponse = (name, hash, response, special) => {
   fetchStore.reqRemove(hash);
 
-  if (!response || response.error) return response;
+  const detail = {...response, collection: name};
+
+  if (!response || response.error) return detail;
 
   const collection = META.collections[name];
+  const emit = collection.emit || special['@emit']
+
   switch (collection.cache) {
-    case 'ram': fetchStore.cacheAdd(hash, response); break;
+    case 'ram': fetchStore.cacheAdd(hash, detail); break;
     case 'local': break;
     default: break;
   }
-  return response;
+
+  switch (typeof emit) {
+    case 'string': window.dispatchEvent(new CustomEvent(emit, {detail})); break;
+    case 'function': emit(detail); break;
+    default: break;
+  }
+
+  return detail;
 }
 
 const requestData = (properties) => {
@@ -78,6 +89,7 @@ const requestData = (properties) => {
   const options = {
     method,
     ...META.options,
+    ...collection.options,
     headers: {
       ...META.options.headers,
       ...special["@headers"],
@@ -115,7 +127,7 @@ const requestData = (properties) => {
   }
 
   const promise = utils.fetchData(url, options)
-    .then((res) => processResponse(name, hash, res))
+    .then((res) => processResponse(name, hash, res, special))
     .then((data) => utils.cloneData(data));
 
   fetchStore.reqAdd(hash, promise);
