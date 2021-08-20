@@ -1,4 +1,6 @@
-# fetch-her
+# `IMPORTANT: v0.1 is deprecated`
+
+# fetch-her - v0.1
 Simple data fetching service for REST APIs
 Now, with a bit saner JWT Bearer implementation.
 
