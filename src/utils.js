@@ -1,6 +1,4 @@
-const GLOBAL = window || global;
-
-function cloneData(data) {
+export function cloneData(data) {
   try {
     return JSON.parse(JSON.stringify(data));
   } catch (e) {
@@ -8,17 +6,14 @@ function cloneData(data) {
     return data;
   }
 }
-function produceError(err) {
+
+export function produceError(err) {
   const message = err.message || err.error || err.errors;
 
-  return {
-    message,
-    error: 1,
-    data: null,
-  };
-} 
+  return { message, error: 1, data: null };
+}
 
-async function fetchData(path, ops = {}) {
+export async function fetchData(path, ops = {}) {
   try {
     const res = await fetch(path, ops);
     const data = await res.json();
@@ -31,21 +26,11 @@ async function fetchData(path, ops = {}) {
   }
 }
 
-function transformCollectionProps(collections = [], data) {
+export function transformCollectionProps(collections = [], data) {
   return collections.reduce((result, collection, idx) => {
     const name = collection.name || collection;
-    result[name] = data[idx]; // eslint-disable-line
-    return result;
+    return { ...result, [name]: data[idx]}
   }, {});
-}
-
-/**
- * Checking for the existing of things. NOTE: null is considered non-existing by this method
- * @param val
- * @returns {boolean}
- */
-function is(val) {
-  return val !== undefined && val !== null;
 }
 
 /**
@@ -53,7 +38,7 @@ function is(val) {
  * @param {Boolean} [checkEmpty] - optional
  * @returns {boolean}
  */
-function isString(str, checkEmpty = false) {
+export function isString(str, checkEmpty = false) {
   const isString = typeof str === 'string';
   return !checkEmpty ? isString : isString && !!str.length;
 }
@@ -63,7 +48,7 @@ function isString(str, checkEmpty = false) {
 * @param {Boolean} [checkEmpty] - optional check whether the object has any values
 * @returns {Boolean}
 */
-function isObject(val, checkEmpty) {
+export function isObject(val, checkEmpty) {
   try {
     const isOb = typeof val === 'object' && !Array.isArray(val) && val !== null;
     return checkEmpty === true
@@ -74,28 +59,36 @@ function isObject(val, checkEmpty) {
   }
 }
 /**
- * Transforms an object's values to params for an URI-like string
  * @param {object} options
  * @returns {string}
  */
-function transformOptions(options = {}) {
+export function propsToCGI(options = {}) {
   const keys = Object.keys(options);
-  const { length } = keys;
-  const result = length ? '?' : '';
+  const max = keys.length - 1
+  const initial = keys.length ? '?' : '';
+
   return keys.reduce((sum, key, idx) => {
     const item = String(options[key]);
-    const amp = idx >= length - 1 ? '' : '&';
+    const amp = idx >= max ? '' : '&';
     return `${sum}${key}=${item + amp}`;
-  }, result);
+  }, initial);
 }
 
-module.exports = {
-  is,
-  isString,
-  isObject,
-  cloneData,
-  produceError,
-  fetchData,
-  transformCollectionProps,
-  transformOptions,
+/**
+ * @param {object} obj
+ * @returns {object}
+ */
+export const splitProps = (obj) => {
+  const SPECIAL = ['@path', '@refresh', '@headers']
+  const props = cloneData(obj)
+  const special = {}
+
+  for (let i = 0; i < SPECIAL.length; i += 1) {
+    const key = SPECIAL[i]
+    if (key in props) {
+      special[key] = props[key]
+      delete props[key]
+    }
+  }
+return { props, special }
 };
