@@ -69,22 +69,8 @@ const processResponse = (name, hash, response, special) => {
   return detail;
 }
 
-const requestData = (properties) => {
-  const { name, hash, props, special } = properties;
-  const collection = META.collections[name];
-
-  // There are collections that combine multiple collections
-  if (collection.collections) return requestMultiple(collection.collections, props);
-
-  // Intercept a matching unresolved request and use its Promise
-  const existing = fetchStore.reqHas(hash);
-  if (existing) return existing;
-
+const initiateRequest = ({ collection, special, props }) => {
   const { method } = collection;
-  if (!method) {
-    return Promise.reject(new Error(`Collection '${name}' has no method`));
-  }
-
   let url = String(collection.url);
   const options = {
     method,
@@ -126,7 +112,27 @@ const requestData = (properties) => {
     default: break;
   }
 
-  const promise = utils.fetchData(url, options)
+  return utils.fetchData(url, options);
+}
+
+const requestData = (properties) => {
+  const { name, hash, props, special } = properties;
+  const collection = META.collections[name];
+
+  // There are collections that combine multiple collections
+  if (collection.collections) return requestMultiple(collection.collections, props);
+
+  // Intercept a matching unresolved request and use its Promise
+  const existing = fetchStore.reqHas(hash);
+  if (existing) return existing;
+
+  if (!collection.method) return Promise.reject(new Error(`Collection '${name}' has no method`));
+
+  const REQUEST = 'mock' in collection
+    ? Promise.resolve({ data: collection.mock, status: 'success', MOCK: true })
+    : initiateRequest({ collection, special, props });
+
+  const promise = REQUEST
     .then((res) => processResponse(name, hash, res, special))
     .then((data) => utils.cloneData(data));
 

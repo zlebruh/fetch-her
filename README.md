@@ -107,6 +107,27 @@ const d6 = await fetchService.GetData('allInfo');
 const d1000 = await fetchService.GetData('some_collection', {we: 'have', many: 'params'});
 ```
 
+## Mocking endpoints
+```javascript
+const myCollections = {
+  unfinished: {
+    url: 'http://non.finished-api.yourdomain.com/api/v3/something',
+    method: 'GET',
+
+    // OPTIONAL PARAMETER - Whatever you put here will be your `data`
+    mock: {some: [1, 22, 333], more: 'stuff'}
+  },
+};
+
+await fff.GetData('unfinished')
+// {
+//   MOCK: true,
+//   collection: "unfinished",
+//   data: {some: [1, 22, 333], more: "stuff"},
+//   status: "success",
+// }
+```
+
 ## Emitting events on successful fetch
 ```javascript
 const myCollections = {
