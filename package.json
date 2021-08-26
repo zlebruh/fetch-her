@@ -1,6 +1,6 @@
 {
   "name": "fetch-her",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Simple data fetching service for REST APIs",
   "main": "src/index.js",
   "scripts": {
@@ -13,7 +13,11 @@
   "keywords": [
     "api",
     "fetch",
-    "data"
+    "data",
+    "cache",
+    "mock",
+    "data fetching",
+    "config based"
   ],
   "author": "zlebruh <code@battlebroyale.com>",
   "license": "MIT",
