@@ -27,7 +27,7 @@ const Setup = (props = {}) => {
   return META;
 };
 
-const GetData = async (name, params = {}) => {
+const GetData = async (name, params = {}, method) => {
   const collection = META.collections[name];
   if (collection && typeof collection === 'object' && !Array.isArray(collection)) {
     const hash = `${name}+++${JSON.stringify(params)}`
@@ -36,7 +36,7 @@ const GetData = async (name, params = {}) => {
 
     return useCache
       ? Promise.resolve(utils.cloneData(fetchStore.cacheHas(hash)))
-      : requestData({ name, hash, props, special }).catch(utils.produceError);
+      : requestData({ name, hash, props, special, method }).catch(utils.produceError);
   }
 
   return utils.produceError({ message: `Collection '${name}' was not recognized` });
@@ -61,7 +61,7 @@ const processResponse = (name, hash, response, special) => {
   }
 
   switch (typeof emit) {
-    case 'string': window.dispatchEvent(new CustomEvent(emit, {detail})); break;
+    case 'string': window && window.dispatchEvent(new CustomEvent(emit, {detail})); break;
     case 'function': emit(detail); break;
     default: break;
   }
@@ -69,8 +69,7 @@ const processResponse = (name, hash, response, special) => {
   return detail;
 }
 
-const initiateRequest = ({ collection, special, props }) => {
-  const { method } = collection;
+const initiateRequest = ({ collection, special, props, method }) => {
   let url = String(collection.url);
   const options = {
     method,
@@ -118,6 +117,7 @@ const initiateRequest = ({ collection, special, props }) => {
 const requestData = (properties) => {
   const { name, hash, props, special } = properties;
   const collection = META.collections[name];
+  const method = (properties.method || collection.method || '').toUpperCase();
 
   // There are collections that combine multiple collections
   if (collection.collections) return requestMultiple(collection.collections, props);
@@ -126,11 +126,11 @@ const requestData = (properties) => {
   const existing = fetchStore.reqHas(hash);
   if (existing) return existing;
 
-  if (!collection.method) return Promise.reject(new Error(`Collection '${name}' has no method`));
+  if (!method) return Promise.reject(new Error(`Collection '${name}' has no method`));
 
   const REQUEST = 'mock' in collection
-    ? Promise.resolve({ data: collection.mock, status: 'success', MOCK: true })
-    : initiateRequest({ collection, special, props });
+    ? Promise.resolve({ data: collection.mock, MOCK: true })
+    : initiateRequest({ collection, special, props, method });
 
   const promise = REQUEST
     .then((res) => processResponse(name, hash, res, special))
@@ -157,4 +157,15 @@ const requestMultiple = (collections = [], props = {}) => (
     .then((data) => utils.transformCollectionProps(collections, data))
 );
 
-export default { Setup, GetData, META };
+const VIRTUAL_METHODS = ['get', 'put', 'post', 'patch', 'delete'];
+const proxy = new Proxy({ Setup, GetData, META }, {
+  get(target, prop) {
+    if (VIRTUAL_METHODS.includes(prop)) {
+      return (name, params = {}) => GetData(name, params, prop)
+    } else if (prop in target) {
+      return target[prop]
+    }
+  }
+})
+
+export default proxy;

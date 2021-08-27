@@ -183,6 +183,17 @@ const mai_data = await fff.GetData('employee', {
 })
 ```
 
+## Overwriting collection HTTP method
+`GetData` does't make much sense to you? We've got you covered with<br >
+Existing collection method is being overwritten while making this request
+```javascript
+await fetchService.get('getSomeCollection', {...})
+await fetchService.put('putSomeCollection', {...})
+await fetchService.post('postSomeCollection', {...})
+await fetchService.patch('patchSomeCollection', {...})
+await fetchService.delete('deleteSomeCollection', {...})
+```
+
 ## Changing headers and JWT
 ```javascript
 fetchService.Setup({
