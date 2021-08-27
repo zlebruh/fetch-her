@@ -29,10 +29,11 @@ export function produceError(err) {
 export async function fetchData(path, ops = {}) {
   try {
     const res = await fetch(path, ops);
-    const data = await res.json();
+    const parsed = await res.json();
+    const data = parsed.data || parsed
 
     return res.status === 200
-      ? data
+      ? { data }
       : produceError(data);
   } catch (err) {
     return produceError(err);
