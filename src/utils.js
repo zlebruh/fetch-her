@@ -16,7 +16,7 @@ export function cloneData(data) {
  * @returns {Object}
  */
 export function produceError(err) {
-  const message = err.message || err.error || err.errors;
+  const message = err.message || err.error || err.errors || JSON.stringify(err);
 
   return { message, error: 1, data: null };
 }
@@ -32,7 +32,7 @@ export async function fetchData(path, ops = {}) {
     const parsed = await res.json();
     const data = parsed.data || parsed
 
-    return res.status === 200
+    return res.status < 400
       ? { data }
       : produceError(data);
   } catch (err) {
@@ -98,7 +98,7 @@ export function propsToCGI(options = {}) {
  * @returns {object}
  */
 export const splitProps = (obj) => {
-  const SPECIAL = ['@emit', '@path', '@refresh', '@options', '@headers']
+  const SPECIAL = ['@emit', '@path', '@refresh', '@options', '@headers', '@extract']
   const props = {...obj}
   const special = {}
 
