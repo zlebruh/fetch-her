@@ -1,6 +1,6 @@
 {
   "name": "fetch-her",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "description": "Simple data fetching service for REST APIs",
   "main": "src/index.js",
   "scripts": {
@@ -16,6 +16,8 @@
     "data",
     "cache",
     "mock",
+    "mocking endpoints",
+    "extract result",
     "data fetching",
     "config based"
   ],

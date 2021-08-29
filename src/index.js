@@ -15,7 +15,7 @@ const Setup = (props = {}) => {
   if (utils.isObject(collections, true)) {
     META.collections = collections;
   }
-  
+
   if (utils.isObject(options, true)) {
     META.options = options;
   }
@@ -34,9 +34,13 @@ const GetData = async (name, params = {}, method) => {
     const { props, special } = utils.splitProps(params)
     const useCache = !!(fetchStore.cacheHas(hash) && special['@refresh'] !== true)
 
-    return useCache
+    const response = useCache
       ? Promise.resolve(utils.cloneData(fetchStore.cacheHas(hash)))
-      : requestData({ name, hash, props, special, method }).catch(utils.produceError);
+      : requestData({ name, hash, props, special, method });
+
+    return response
+      .then(v => extractResponse(v, special['@extract']))
+      .catch(utils.produceError)
   }
 
   return utils.produceError({ message: `Collection '${name}' was not recognized` });
@@ -44,10 +48,32 @@ const GetData = async (name, params = {}, method) => {
 
 
 // ############################### LOCAL ###############################
+const extractResponse = (response, manualExtract = '') => {
+  const extract = manualExtract || META.collections[response.collection].extract;
+  const DATA = response.data;
+  const isExtractString = typeof extract === 'string'
+  
+  const validType = (Array.isArray(extract) || isExtractString) && extract.length;
+  if (response.error || !validType) return response;
+
+  const toExtract = isExtractString ? [extract] : extract;
+
+  const extracted = toExtract.filter(v => v).reduce((prev, prop) => ({
+    ...prev,
+    [prop]: DATA[prop]
+  }), null) || DATA
+
+  const data = toExtract.length === 1
+    ? extracted[toExtract[0]]
+    : extracted
+
+  return { ...response, data };
+}
+
 const processResponse = (name, hash, response, special) => {
   fetchStore.reqRemove(hash);
 
-  const detail = {...response, collection: name};
+  const detail = { ...response, collection: name };
 
   if (!response || response.error) return detail;
 
@@ -61,7 +87,7 @@ const processResponse = (name, hash, response, special) => {
   }
 
   switch (typeof emit) {
-    case 'string': window && window.dispatchEvent(new CustomEvent(emit, {detail})); break;
+    case 'string': window && window.dispatchEvent(new CustomEvent(emit, { detail })); break;
     case 'function': emit(detail); break;
     default: break;
   }
