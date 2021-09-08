@@ -101,11 +101,12 @@ const initiateRequest = ({ collection, special, props, method }) => {
     method,
     ...META.options,
     ...collection.options,
+    ...special['@options'],
     headers: {
-      ...META.options.headers,
-      ...special["@headers"],
-      ...collection.headers,
       ...META.auth,
+      ...META.options.headers,
+      ...collection.headers,
+      ...special["@headers"]
     },
   };
 
