@@ -27,20 +27,17 @@ const Setup = (props = {}) => {
   return META;
 };
 
-const GetData = async (name, params = {}, method) => {
+const GetData = (name, params = {}, method) => {
   const collection = META.collections[name];
   if (collection && typeof collection === 'object' && !Array.isArray(collection)) {
     const hash = `${name}+++${JSON.stringify(params)}`
     const { props, special } = utils.splitProps(params)
-    const useCache = !!(fetchStore.cacheHas(hash) && special['@refresh'] !== true)
+    const CACHE = fetchStore.cacheHas(hash)
+    const useCache = !!(CACHE && special['@refresh'] !== true)
 
-    const response = useCache
-      ? Promise.resolve(utils.cloneData(fetchStore.cacheHas(hash)))
+    return useCache
+      ? Promise.resolve(CACHE)
       : requestData({ name, hash, props, special, method });
-
-    return response
-      .then(v => extractResponse(v, special['@extract']))
-      .catch(utils.produceError)
   }
 
   return utils.produceError({ message: `Collection '${name}' was not recognized` });
@@ -73,12 +70,13 @@ const extractResponse = (response, manualExtract = '') => {
 const processResponse = (name, hash, response, special) => {
   fetchStore.reqRemove(hash);
 
-  const detail = { ...response, collection: name };
+  const RESPONSE = { ...response, collection: name };
 
-  if (!response || response.error) return detail;
+  if (!response || response.error) return RESPONSE;
 
   const collection = META.collections[name];
   const emit = collection.emit || special['@emit']
+  const detail = extractResponse(utils.cloneData(RESPONSE), special['@extract'])
 
   switch (collection.cache) {
     case 'ram': fetchStore.cacheAdd(hash, detail); break;
@@ -155,17 +153,15 @@ const requestData = (properties) => {
 
   if (!method) return Promise.reject(new Error(`Collection '${name}' has no method`));
 
-  const REQUEST = 'mock' in collection
+  const promise = 'mock' in collection
     ? Promise.resolve({ data: collection.mock, MOCK: true })
     : initiateRequest({ collection, special, props, method });
 
-  const promise = REQUEST
-    .then((res) => processResponse(name, hash, res, special))
-    .then((data) => utils.cloneData(data));
-
   fetchStore.reqAdd(hash, promise);
 
-  return promise;
+  return promise
+    .then((res) => processResponse(name, hash, res, special))
+    .catch(utils.produceError);
 };
 
 const fetchCollections = (collections = [], props = {}) => (

@@ -122,11 +122,11 @@ const mai_data = await fff.GetData('employee', {
 `GetData` does't make much sense to you? We've got you covered with<br >
 Existing collection method is being overwritten while making this request
 ```javascript
-await fetchService.get('getSomeCollection', {...})
-await fetchService.put('putSomeCollection', {...})
-await fetchService.post('postSomeCollection', {...})
-await fetchService.patch('patchSomeCollection', {...})
-await fetchService.delete('deleteSomeCollection', {...})
+fetchService.get('someCollection', {...})
+fetchService.put('someCollection', {...})
+fetchService.post('someCollection', {...})
+fetchService.patch('someCollection', {...})
+fetchService.delete('someCollection', {...})
 ```
 
 ## Changing options, headers and JWT
