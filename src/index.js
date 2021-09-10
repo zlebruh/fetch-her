@@ -30,14 +30,23 @@ const Setup = (props = {}) => {
 const GetData = (name, params = {}, method) => {
   const collection = META.collections[name];
   if (collection && typeof collection === 'object' && !Array.isArray(collection)) {
-    const hash = `${name}+++${JSON.stringify(params)}`
-    const { props, special } = utils.splitProps(params)
+    const { props, special } = utils.splitProps(params);
+
+    // There are collections that combine multiple collections
+    if (collection.collections) return requestMultiple(collection.collections, props);
+
+    const hash = `${name}+++${JSON.stringify(props)}`
     const CACHE = fetchStore.cacheHas(hash)
     const useCache = !!(CACHE && special['@refresh'] !== true)
 
-    return useCache
+    const result = useCache
       ? Promise.resolve(CACHE)
       : requestData({ name, hash, props, special, method });
+
+    return result
+      .then(v => utils.cloneData({ ...v, collection: name }))
+      .then(v => utils.extractResponse(v, (special['@extract'] || collection.extract)))
+      .then(v => utils.emitResponse(v, (special['@emit'] || collection.emit)))
   }
 
   return utils.produceError({ message: `Collection '${name}' was not recognized` });
@@ -45,52 +54,18 @@ const GetData = (name, params = {}, method) => {
 
 
 // ############################### LOCAL ###############################
-const extractResponse = (response, manualExtract = '') => {
-  const extract = manualExtract || META.collections[response.collection].extract;
-  const DATA = response.data;
-  const isExtractString = typeof extract === 'string'
-  
-  const validType = (Array.isArray(extract) || isExtractString) && extract.length;
-  if (response.error || !validType) return response;
-
-  const toExtract = isExtractString ? [extract] : extract;
-
-  const extracted = toExtract.filter(v => v).reduce((prev, prop) => ({
-    ...prev,
-    [prop]: DATA[prop]
-  }), null) || DATA
-
-  const data = toExtract.length === 1
-    ? extracted[toExtract[0]]
-    : extracted
-
-  return { ...response, data };
-}
-
-const processResponse = (name, hash, response, special) => {
+const processResponse = (name, hash, response) => {
   fetchStore.reqRemove(hash);
 
-  const RESPONSE = { ...response, collection: name };
+  if (!response || response.error) return response;
 
-  if (!response || response.error) return RESPONSE;
-
-  const collection = META.collections[name];
-  const emit = collection.emit || special['@emit']
-  const detail = extractResponse(utils.cloneData(RESPONSE), special['@extract'])
-
-  switch (collection.cache) {
-    case 'ram': fetchStore.cacheAdd(hash, detail); break;
+  switch (META.collections[name].cache) {
+    case 'ram': fetchStore.cacheAdd(hash, response); break;
     case 'local': break;
     default: break;
   }
 
-  switch (typeof emit) {
-    case 'string': window && window.dispatchEvent(new CustomEvent(emit, { detail })); break;
-    case 'function': emit(detail); break;
-    default: break;
-  }
-
-  return detail;
+  return response;
 }
 
 const initiateRequest = ({ collection, special, props, method }) => {
@@ -143,9 +118,6 @@ const requestData = (properties) => {
   const { name, hash, props, special } = properties;
   const collection = META.collections[name];
   const method = (properties.method || collection.method || '').toUpperCase();
-
-  // There are collections that combine multiple collections
-  if (collection.collections) return requestMultiple(collection.collections, props);
 
   // Intercept a matching unresolved request and use its Promise
   const existing = fetchStore.reqHas(hash);

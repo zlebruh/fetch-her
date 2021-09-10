@@ -1,7 +1,3 @@
-/**
- * @param {Object} data
- * @returns {Object}
- */
 export function cloneData(data) {
   try {
     return JSON.parse(JSON.stringify(data));
@@ -11,40 +7,25 @@ export function cloneData(data) {
   }
 }
 
-/**
- * @param {Error|Object} path
- * @returns {Object}
- */
 export function produceError(err) {
   const message = err.message || err.error || err.errors || JSON.stringify(err);
 
   return { message, error: 1, data: null };
 }
 
-/**
- * @param {String} path
- * @param {Object} ops
- * @returns {Object}
- */
 export async function fetchData(path, ops = {}) {
   try {
     const res = await fetch(path, ops);
-    const parsed = await res.json();
-    const data = parsed.data || parsed
 
-    return res.status < 400
-      ? { data }
-      : produceError(data);
+    if (res.status >= 400) return produceError({message: res.statusText});
+
+    const result = await res.json();
+    return { data: result.data || result }
   } catch (err) {
     return produceError(err);
   }
 }
 
-/**
- * @param {Array} collections
- * @param {Object} data
- * @returns {Object}
- */
 export function transformCollectionProps(collections = [], data) {
   return collections.reduce((result, collection, idx) => {
     const name = collection.name || collection;
@@ -52,21 +33,11 @@ export function transformCollectionProps(collections = [], data) {
   }, {});
 }
 
-/**
- * @param {String} str
- * @param {Boolean} [checkEmpty] - optional
- * @returns {boolean}
- */
 export function isString(str, checkEmpty = false) {
   const isString = typeof str === 'string';
   return !checkEmpty ? isString : isString && !!str.length;
 }
 
-/**
-* @param {*} val
-* @param {Boolean} [checkEmpty] - optional check whether the object has any values
-* @returns {Boolean}
-*/
 export function isObject(val, checkEmpty) {
   try {
     const isOb = typeof val === 'object' && !Array.isArray(val) && val !== null;
@@ -77,10 +48,7 @@ export function isObject(val, checkEmpty) {
     return false;
   }
 }
-/**
- * @param {object} options
- * @returns {string}
- */
+
 export function propsToCGI(options = {}) {
   const keys = Object.keys(options);
   const max = keys.length - 1
@@ -93,11 +61,7 @@ export function propsToCGI(options = {}) {
   }, initial);
 }
 
-/**
- * @param {object} obj
- * @returns {object}
- */
-export const splitProps = (obj) => {
+export function splitProps(obj) {
   const SPECIAL = ['@emit', '@path', '@refresh', '@options', '@headers', '@extract']
   const props = {...obj}
   const special = {}
@@ -110,4 +74,34 @@ export const splitProps = (obj) => {
     }
   }
 return { props, special }
-};
+}
+
+export function extractResponse(response, extract = '') {
+  const DATA = response.data;
+  const isExtractString = typeof extract === 'string'
+
+  const validType = (Array.isArray(extract) || isExtractString) && extract.length;
+  if (response.error || !validType) return response;
+
+  const toExtract = isExtractString ? [extract] : extract;
+
+  const extracted = toExtract.filter(v => v).reduce((prev, prop) => ({
+    ...prev,
+    [prop]: DATA[prop]
+  }), null) || DATA
+
+  const data = toExtract.length === 1
+    ? extracted[toExtract[0]]
+    : extracted
+
+  return { ...response, data };
+}
+
+export function emitResponse(detail, emit) {
+
+  const type = typeof emit;
+  if (type === 'string' && window) window.dispatchEvent(new CustomEvent(emit, { detail }));
+  if (type === 'function') emit(detail);
+
+  return detail
+}

@@ -166,8 +166,6 @@ const myCollections = {
     method: 'GET',
     
     // Recevies an object with the collection's name and the response
-    // Only called after a `successful` fetch.
-    // Returning cache does not trigger it
     emit: ({collection: String, response: Object}) => console.warn('Yeah...'),
   },
   employee: {
@@ -175,8 +173,6 @@ const myCollections = {
     method: 'GET',
 
     // User provided string is used to dispatch a CustomEvent instance
-    // that receives `{response: Object, collection: String}` as its `detail`
-    // Only called after a `successful` fetch. Returning cache does not trigger it
     emit: 'YOUR_STRING',
   }
 };
