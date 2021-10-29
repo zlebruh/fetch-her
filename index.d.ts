@@ -1,10 +1,8 @@
 declare module 'fetch-her' {
-  export const META: { BEARER: String | null; OPTIONS: Object; COLLECTIONS: Object; };
+  export const META: { options: Object; collections: Object; };
   export function GetData(name: string, props?: object): Promise<object>;
-  // export function Setup(props?: { collections?: Object, options?: Object, bearer?: String | null }): any;
   export function Setup(props?: {
     collections?: Object,
-    bearer?: String | null,
     options?: {
       mode?: 'no-cors' | 'cors' | 'same-origin';
       headers?: {

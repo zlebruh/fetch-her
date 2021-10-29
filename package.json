@@ -1,6 +1,6 @@
 {
   "name": "fetch-her",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Simple data fetching service for REST APIs",
   "main": "src/index.js",
   "scripts": {
@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/zlebruh/fetch-her#readme",
   "devDependencies": {
-    "jest": "^27.0.6",
+    "jest": "^27.2.5",
     "whatwg-fetch": "^3.6.2"
   }
 }

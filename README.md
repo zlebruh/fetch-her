@@ -133,8 +133,13 @@ fetchService.delete('someCollection', {...})
 ```javascript
 fetchService.Setup({
   collections: myCollections,
-  options: { headers: { no: 'more', hanging: 'wires' } },
-  bearer: 'HASH' // or null to disable the header
+  options: {
+    headers: {
+      no: 'more',
+      hanging: 'wires',
+      bearer: 'HASH' // Your token or null to disable the header
+    }
+  }
 });
 ```
 
