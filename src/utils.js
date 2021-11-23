@@ -26,13 +26,6 @@ export async function fetchData(path, ops = {}) {
   }
 }
 
-export function transformCollectionProps(collections = [], data) {
-  return collections.reduce((result, collection, idx) => {
-    const name = collection.name || collection
-    return { ...result, [name]: data[idx] }
-  }, {})
-}
-
 export function isString(str, checkEmpty = false) {
   const isString = typeof str === 'string'
   return !checkEmpty ? isString : isString && !!str.length
@@ -62,7 +55,7 @@ export function propsToCGI(options = {}) {
 }
 
 export function splitProps(obj) {
-  const SPECIAL = ['@emit', '@path', '@refresh', '@options', '@headers', '@extract']
+  const SPECIAL = ['$emit', '$body', '$path', '$refresh', '$reject', '$options', '$headers', '$extract']
   const props = { ...obj }
   const special = {}
 

@@ -3,23 +3,26 @@ import * as fetchStore from '../src/store'
 
 const META = { options: {}, collections: {} }
 
-const REQ = (name, params = {}, method) => {
+const REQ = ({ name, params, method }) => {
   const collection = META.collections[name]
   const { props, special } = utils.splitProps(params)
   const hash = `${name}+++${JSON.stringify(props)}`
+  const multi = Array.isArray(collection.collections)
   const options = {
-    method: method.toUpperCase(),
     ...META.options,
     ...collection.options,
-    ...special['@options'],
+    ...special.$options,
     headers: {
       ...META.options.headers,
       ...collection.headers,
-      ...special["@headers"]
+      ...special.$headers
     },
   }
 
-  return { collection, options, props, special, name, hash }
+  const reqMethod = method || collection.method
+  if (reqMethod) options.method = reqMethod.toUpperCase()
+
+  return { collection, options, props, special, name, hash, multi }
 }
 
 const Setup = (props = {}) => {
@@ -31,47 +34,23 @@ const Setup = (props = {}) => {
   return META
 }
 
-const GetData = (name, params = {}, method) => {
-  const exists = name in META.collections
-  if (!exists) return utils.produceError({ message: `Collection '${name}' was not recognized` })
-
-  const req = REQ(name, params, method)
-  const { collection, props, special, hash } = req
-
-  // There are collections that combine multiple collections
-  if (collection.collections) return requestMultiple(collection.collections, props)
-
-  const CACHE = fetchStore.cacheHas(hash)
-  const useCache = !!(CACHE && special['@refresh'] !== true)
-
-  const result = useCache
-    ? Promise.resolve(CACHE)
-    : requestData(req)
-
-  return result
-    .then(v => utils.cloneData({ ...v, collection: name }))
-    .then(v => utils.extractResponse(v, (special['@extract'] || collection.extract)))
-    .then(v => utils.emitResponse(v, (special['@emit'] || collection.emit)))
-}
-
-// ############################### LOCAL ###############################
-const processResponse = (collection, hash, response) => {
-  fetchStore.reqRemove(hash)
+const processResponse = (req, response) => {
+  fetchStore.reqRemove(req.hash)
 
   if (!response || response.error) return response
 
-  switch (collection.cache) {
-    case 'ram': fetchStore.cacheAdd(hash, response); break
+  switch (req.collection.cache) {
+    case 'ram': fetchStore.cacheAdd(req.hash, response); break
     case 'local': break
     default: break
   }
 
-  return response
+  return utils.cloneData(response)
 }
 
 const initiateRequest = ({ collection, options, props, special }) => {
   let url = String(collection.url)
-  const path = '@path'
+  const path = '$path'
   const urlParam = special[path]
 
   if (typeof urlParam === 'string') {
@@ -79,7 +58,7 @@ const initiateRequest = ({ collection, options, props, special }) => {
     url += urlParam
   }
 
-  const body = { ...collection.props, ...props }
+  const body = special.$body || { ...collection.props, ...props }
 
   switch (options.method) {
     case 'GET': url += utils.propsToCGI(body); break
@@ -101,46 +80,65 @@ const initiateRequest = ({ collection, options, props, special }) => {
 }
 
 const requestData = (req) => {
-  if (!req.options.method) return Promise.reject(new Error(`Collection '${name}' has no method`))
+  const promise = 'mock' in req.collection
+    ? Promise.resolve({ data: req.collection.mock, MOCK: true })
+    : initiateRequest(req)
 
-  const { collection, name, hash } = req
-  const existing = fetchStore.reqHas(hash)
+  fetchStore.reqAdd(req.hash, promise)
+
+  return promise
+}
+
+const requestMultiple = (req) => {
+  const { collections } = req.collection
+  const list = collections.map(name => FetchData(name, req.props[name]))
+
+  return Promise
+    .all(list)
+    .then(data => collections.reduce((result, name, idx) => ({ ...result, [name]: data[idx] }), {}))
+}
+
+const validateRequest = (props) => {
+  if (!(props.name in META.collections)) return new Error(`Collection '${props.name}' was not recognized`)
+  
+  const req = REQ(props)
+  return req.multi || req.collection.mock || req?.options?.method
+    ? req
+    : new Error(`Collection '${props.name}' has no method`)
+}
+
+const serveCacheOrRequest = (req) => {
+  const CACHE = fetchStore.cacheHas(req.hash)
+  const useCache = !!(CACHE && req.special.$refresh !== true)
+  return useCache ? CACHE : requestData(req)
+}
+
+const FetchData = (name, params = {}, method) => {
+  const req = validateRequest({ name, params, method })
+  const existing = fetchStore.reqHas(req.hash)
+
+  if (req.multi) return requestMultiple(req)
 
   // Intercept a matching unresolved request and use its Promise
   if (existing) return existing
 
-  const promise = 'mock' in collection
-    ? Promise.resolve({ data: collection.mock, MOCK: true })
-    : initiateRequest(req)
-
-  fetchStore.reqAdd(hash, promise)
+  const promise = req instanceof Error
+    ? Promise.reject(req)
+    : serveCacheOrRequest(req)
 
   return promise
-    .then((res) => processResponse(collection, hash, res))
+    .then(v => processResponse(req, v))
+    .then(v => utils.extractResponse(v, (req.special.$extract || req.collection.extract)))
+    .then(v => utils.emitResponse(v, (req.special.$emit || req.collection.emit)))
     .catch(utils.produceError)
+    .then(v => params.$reject ? Promise.reject(v) : v)
 }
 
-const fetchCollections = (collections = [], props = {}) => (
-  collections.map((item) => {
-    const collection = item.name || item
-    return GetData(collection, {
-      ...item.props,
-      ...props[collection]
-    })
-  })
-)
-
-const requestMultiple = (collections = [], props = {}) => (
-  Promise
-    .all(fetchCollections(collections, props))
-    .then((data) => utils.transformCollectionProps(collections, data))
-)
-
 const VIRTUAL_METHODS = ['get', 'put', 'post', 'patch', 'delete']
-const proxy = new Proxy({ Setup, GetData, META }, {
+const proxy = new Proxy({ fetch: FetchData, Setup, META }, {
   get(target, prop) {
     if (VIRTUAL_METHODS.includes(prop)) {
-      return (name, params = {}) => GetData(name, params, prop)
+      return (name, params = {}) => FetchData(name, params, prop)
     } else if (prop in target) {
       return target[prop]
     }

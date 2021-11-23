@@ -57,12 +57,12 @@ test('SERVICE OK #1', async () => {
 // const fetchService = new FetchService(COLLECTIONS);
 
 // test('Use unexisting collection', async () => {
-//   const request = await fetchService.GetData('erroneousNameHere');
+//   const request = await fetchService.fetch('erroneousNameHere');
 //   expect(request.data).toBe(null);
 // });
 
 // test('Use existing collection', async () => {
-//   const request = await fetchService.GetData('employees');
+//   const request = await fetchService.fetch('employees');
 //   const { data } = request;
   
 //   expect(data).toEqual(
@@ -79,7 +79,7 @@ test('SERVICE OK #1', async () => {
 // });
 
 // // test('Use combined collection', async () => {
-// //   const data = await fetchService.GetData('allInfo', {we: 'have', many: 'params'});
+// //   const data = await fetchService.fetch('allInfo', {we: 'have', many: 'params'});
 // //   const ANY = expect.anything();
 
 // //   expect(data).toEqual(
@@ -96,13 +96,13 @@ test('SERVICE OK #1', async () => {
 // // });
 
 // // test('Use BROKEN HOST collection', async () => {
-// //   const request = await fetchService.GetData('broken');
+// //   const request = await fetchService.fetch('broken');
 // //   expect(request.data).toEqual(null);
 // // });
 
 // // SPECIAL DIRECTIVES
 // test('Use @path correctly', async () => {
-//   const request = await fetchService.GetData('employee', {
+//   const request = await fetchService.fetch('employee', {
 //     '@path': 'user_id_15',
 //     more: {props: 'here'},
 //   });
@@ -110,7 +110,7 @@ test('SERVICE OK #1', async () => {
 //   expect(request.data).toEqual(null);
 // });
 // test('Use @path in a BROKEN way', async () => {
-//   const request = await fetchService.GetData('employee', {
+//   const request = await fetchService.fetch('employee', {
 //     '@path': ['user_id_15'],
 //     more: {props: 'here'},
 //   });
