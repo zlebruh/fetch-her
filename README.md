@@ -22,14 +22,7 @@ const myCollections = {
     // OPTIONAL PARAMETER - You can assign anything to the `mock` property
     // Whatever you put here will be your `data` property
     mock: {some: [1, 22, 333], more: 'stuff', aaa: 111, bbb: 222, ccc: {ama: 'zing'}},
-
-    // Extract these properties into the returned data object
-    // If only a single prop is being extracted,
-    // its content will be merged into the returned data object
-    // Empty strings are being filtered out/ignored
-    extract: ['some', 'ccc'] // OPTIONAL - String[] | String
-    // OR
-    extract: 'more'
+    extract: ['some', 'ccc'] // OPTIONAL - string[]
   },
   
   employees: {
@@ -38,13 +31,13 @@ const myCollections = {
     method: 'GET',
     options: {}, // OPTIONAL PARAMETER
     headers: {}, // OPTIONAL PARAMETER
-    emit: (e) => (), // OPTIONAL PARAMETER - Function | String
+    done: (e) => (), // OPTIONAL PARAMETER - Function | String
   },
   employee: {
     url: 'http://dummy.restapiexample.com/api/v1/employee/1',
     method: 'GET',
     cache: 'ram',
-    emit: 'YOUR_CUSTOM_EVENT_NAME_HERE', // OPTIONAL PARAMETER - Function | String
+    done: 'YOUR_CUSTOM_EVENT_NAME_HERE', // OPTIONAL PARAMETER - Function | String
   },
   create: {
     url: 'http://dummy.restapiexample.com/api/v1/create',
@@ -96,8 +89,8 @@ const mai_data = await fff.fetch('employee', {
   $body: {},
 
   // Two ways to replace a collection emit or add a new one just for this call
-  $emit: (e) => (),
-  $emit: 'FETCH_DATA',
+  $done: (e) => (),
+  $done: 'FETCH_DATA',
   
   // Causes the fetcher to reject failed attempts
   // Be default, we don't do that and simply resolve
@@ -121,7 +114,6 @@ const mai_data = await fff.fetch('employee', {
   $refresh: true,
 
   // Replaces the collection `extract` property, if any
-  $extract: 'prop1',
   $extract: ['prop1', 'prop2', 'prop3'],
 })
 ```
@@ -191,14 +183,14 @@ const myCollections = {
     method: 'GET',
     
     // Recevies an object with the collection's name and the response
-    emit: ({collection: String, response: Object}) => console.warn('Yeah...'),
+    done: ({collection: String, response: Object}) => console.warn('Yeah...'),
   },
   employee: {
     url: 'http://dummy.restapiexample.com/api/v1/employee/1',
     method: 'GET',
 
     // User provided string is used to dispatch a CustomEvent instance
-    emit: 'YOUR_STRING',
+    done: 'YOUR_STRING',
   }
 };
 ```
