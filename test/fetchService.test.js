@@ -1,12 +1,4 @@
-test('SERVICE OK #1', async () => {
-  expect('dummy').toBe('dummy');
-});
-
-// #########################################################################################
-
-// import 'whatwg-fetch';
-
-// import FetchService from '../index';
+// import fetchService from '../dist/index.js'
 
 // const COLLECTIONS = {
 //   employees: {
@@ -54,65 +46,10 @@ test('SERVICE OK #1', async () => {
 //   },
 // };
 
-// const fetchService = new FetchService(COLLECTIONS);
+// fetchService.Setup({ collections: COLLECTIONS });
 
-// test('Use unexisting collection', async () => {
-//   const request = await fetchService.fetch('erroneousNameHere');
-//   expect(request.data).toBe(null);
-// });
-
-// test('Use existing collection', async () => {
-//   const request = await fetchService.fetch('employees');
-//   const { data } = request;
-  
-//   expect(data).toEqual(
-//     expect.arrayContaining([
-//       expect.objectContaining({
-//         id: '22',
-//         employee_name: 'Yuri Berry',
-//         employee_salary: '675000',
-//         employee_age: '40',
-//         profile_image: '',
-//       })
-//     ])
-//   );
-// });
-
-// // test('Use combined collection', async () => {
-// //   const data = await fetchService.fetch('allInfo', {we: 'have', many: 'params'});
-// //   const ANY = expect.anything();
-
-// //   expect(data).toEqual(
-// //     expect.objectContaining({
-// //       'about': ANY,
-// //       'info': ANY,
-// //       'employees': ANY,
-// //       'employee': ANY,
-// //       'create': ANY,
-// //       'update': ANY,
-// //       'delete': ANY,
-// //     })
-// //   );
-// // });
-
-// // test('Use BROKEN HOST collection', async () => {
-// //   const request = await fetchService.fetch('broken');
-// //   expect(request.data).toEqual(null);
-// // });
-
-// // SPECIAL DIRECTIVES
-// test('Use @path correctly', async () => {
-//   const request = await fetchService.fetch('employee', {
-//     '@path': 'user_id_15',
-//     more: {props: 'here'},
-//   });
-//   expect(request.message).toEqual('Successfully! Record has been fetched.');
-//   expect(request.data).toEqual(null);
-// });
-// test('Use @path in a BROKEN way', async () => {
-//   const request = await fetchService.fetch('employee', {
-//     '@path': ['user_id_15'],
-//     more: {props: 'here'},
-//   });
-//   expect(request.message).toEqual('Property "@path" must be a non-empty string');
-// });
+describe('FetchService - index.js', () => {
+  test('SERVICE OK #1', async () => {
+    expect('dummy').toBe('dummy')
+  })
+})
