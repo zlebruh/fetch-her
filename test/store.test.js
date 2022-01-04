@@ -1,6 +1,5 @@
-// require('whatwg-fetch');
-
-test('STORE OK #1', async () => {
-  // console.log('fetchStore', fetchStore);
-  expect('dummy').toBe('dummy');
-});
+describe('FetchService - store.js', () => {
+  test('STORE OK #1', async () => {
+    expect('dummy').toBe('dummy')
+  })
+})

@@ -8,7 +8,7 @@ import fetchService from 'fetch-her';
 
 fetchService.Setup({ collections: myCollections });
 
-await fetchService.GetData('SOME_COLLECTION_NAME', {...});
+await fetchService.fetch('SOME_COLLECTION_NAME', {...});
 ```
 
 ## Configuration
@@ -22,14 +22,7 @@ const myCollections = {
     // OPTIONAL PARAMETER - You can assign anything to the `mock` property
     // Whatever you put here will be your `data` property
     mock: {some: [1, 22, 333], more: 'stuff', aaa: 111, bbb: 222, ccc: {ama: 'zing'}},
-
-    // Extract these properties into the returned data object
-    // If only a single prop is being extracted,
-    // its content will be merged into the returned data object
-    // Empty strings are being filtered out/ignored
-    extract: ['some', 'ccc'] // OPTIONAL - String[] | String
-    // OR
-    extract: 'more'
+    extract: ['some', 'ccc'] // OPTIONAL - string[]
   },
   
   employees: {
@@ -38,13 +31,13 @@ const myCollections = {
     method: 'GET',
     options: {}, // OPTIONAL PARAMETER
     headers: {}, // OPTIONAL PARAMETER
-    emit: (e) => (), // OPTIONAL PARAMETER - Function | String
+    done: (e) => (), // OPTIONAL PARAMETER - Function | String
   },
   employee: {
     url: 'http://dummy.restapiexample.com/api/v1/employee/1',
     method: 'GET',
     cache: 'ram',
-    emit: 'YOUR_CUSTOM_EVENT_NAME_HERE', // OPTIONAL PARAMETER - Function | String
+    done: 'YOUR_CUSTOM_EVENT_NAME_HERE', // OPTIONAL PARAMETER - Function | String
   },
   create: {
     url: 'http://dummy.restapiexample.com/api/v1/create',
@@ -83,7 +76,7 @@ const myCollections = {
 ## Usage and special props - everything is optional
 ```javascript
 
-const mai_data = await fff.GetData('employee', {
+const mai_data = await fff.fetch('employee', {
   // Your props are transformed to either CGI in the URL or body payload
   a: 1,
   b: 2,
@@ -91,35 +84,54 @@ const mai_data = await fff.GetData('employee', {
   
   // Special props ARE OPTIONAL
 
+  // When used, its value will replace your regular non-special props
+  // which are usually used as your body payload
+  $body: {},
+
   // Two ways to replace a collection emit or add a new one just for this call
-  '@emit': (e) => (),
-  '@emit': 'FETCH_DATA',
+  $done: (e) => (),
+  $done: 'FETCH_DATA',
   
+  // Causes the fetcher to reject failed attempts
+  // Be default, we don't do that and simply resolve
+  // Exmaple: {error: 1, message: 'Bla bla bla', data: null}
+  $reject: true,
 
   // Merged into a collection's url
-  '@path': '/aaa/bbb/ccc',
+  $path: '/aaa/bbb/ccc',
 
   // Merged with the fetch options object.
   // Will overwrite any matching props provided by
   // the global options and the collection itself
-  '@options': {...},
+  $options: {...},
 
   // Merged with headers from the global Setup object
   // AND the headers in the collection itself
-  '@headers': {x: 1, y: 2, z: 3},
+  $headers: {x: 1, y: 2, z: 3},
 
   // Cached collection response, if any, is being ignored and a new request is being made.
   // If successful, any prior cache is updated
-  '@refresh': true,
+  $refresh: true,
 
   // Replaces the collection `extract` property, if any
-  '@extract': 'prop1',
-  '@extract': ['prop1', 'prop2', 'prop3'],
+  $extract: ['prop1', 'prop2', 'prop3'],
 })
 ```
 
+## Aborting requests
+The simplest way to abort a request is like this
+```javascript
+const ac = new AbortController()
+
+fetchService.get('someCollection', {
+  $options: { signal: ac.signal }
+})
+
+ac.abort()
+```
+
 ## Overwriting collection HTTP method
-`GetData` does't make much sense to you? We've got you covered with<br >
+`fetchService.fetch` does't make much sense to you? We've got you covered with<br >
 Existing collection method is being overwritten while making this request
 ```javascript
 fetchService.get('someCollection', {...})
@@ -155,7 +167,7 @@ const myCollections = {
   },
 };
 
-await fff.GetData('unfinished')
+await fff.fetch('unfinished')
 // {
 //   MOCK: true,
 //   collection: "unfinished",
@@ -171,14 +183,14 @@ const myCollections = {
     method: 'GET',
     
     // Recevies an object with the collection's name and the response
-    emit: ({collection: String, response: Object}) => console.warn('Yeah...'),
+    done: ({collection: String, response: Object}) => console.warn('Yeah...'),
   },
   employee: {
     url: 'http://dummy.restapiexample.com/api/v1/employee/1',
     method: 'GET',
 
     // User provided string is used to dispatch a CustomEvent instance
-    emit: 'YOUR_STRING',
+    done: 'YOUR_STRING',
   }
 };
 ```
