@@ -123,9 +123,6 @@ const fetchMultiple = async (req: ReqProps) => {
 
 const processResponse = (req: Obj, response: any) => {
   fetchStore.reqRemove(req.hash)
-
-  if (!response || response.error) return response
-
   const data = JSON.parse(JSON.stringify(response))
 
   if (req.collection?.cache === 'ram') fetchStore.cacheAdd(req.hash, data)

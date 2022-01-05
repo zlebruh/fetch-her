@@ -16,14 +16,14 @@ export function isObject(val: any, checkEmpty?: boolean) {
   }
 }
 
-export function produceError(err: Obj|any, pong?: Obj): FetchError {
+export function produceError(err: Obj|any, result?: Obj): FetchError {
   const { problems = [], $req = null } = err || {}
-  const { data = null } = pong || {}
+  const { data = null } = result || {}
   const message = err.message || err.error || err.errors
 
   if (message) problems.push(message)
 
-  return { ...pong, error: 1, data, problems, $req }
+  return { ...result, error: 1, data, problems, $req }
 }
 
 export function propsToCGI(options: Obj = {}) {
@@ -34,7 +34,7 @@ export function propsToCGI(options: Obj = {}) {
   return keys.reduce((sum, key, idx) => {
     const item = String(options[key])
     const amp = idx >= max ? '' : '&'
-    return `${sum}${key}=${item + amp}`
+    return `${sum + key}=${item + amp}`
   }, initial)
 }
 
@@ -58,14 +58,11 @@ export function omit(target: Obj, keys:string[] = []) {
   for (const key of keys) delete result[key]
   return result
 }
+
 export function pick(target: Obj, keys:string[] = []) {
-  try {
-    if (!target) return target
-    return keys.filter(v => v).reduce((v: Obj|null, k) => ({ ...v, [k]: target[k] }), null) || target
-  } catch (err) {
-    console.warn(err)
-    return target
-  }
+  return isObject(target)
+    ? keys.filter(v => v).reduce((v: Obj|null, k) => ({ ...v, [k]: target[k] }), null) || target
+    : target
 }
 
 export function extractResponse(reqResponse: Obj, extract: string[]) {
@@ -83,42 +80,26 @@ export function emitResponse(detail: any, req: ReqProps) {
 }
 
 // ####################### FETCH #######################
-const regexJSON = /application\/json/
-const regexFile = /image|file/
+const regex = { json: /application\/json/, file: /image|file/ }
 const contentType = 'content-type'
-
-function getHeaders(entries: any): Obj {
-  const list = {}
-  for (let [key, value] of entries) Object.assign(list, {[key]: value})
-  return list
-}
-
-function extractResult(res: Response): any {
-  const headers = getHeaders(res.headers.entries())
-
-  if (contentType in headers === false) return {}
-
-  const value = headers[contentType]
-
-  if (regexJSON.test(value)) {
-    return res.json()
-  } else if (regexFile.test(value)) {
-    return res.blob()
-  }
-
-  return res.text()
-}
 
 export async function fetchData(uri: string, options: RequestInit = {}) {
   try {
     const res = await fetch(uri, options)
-    const data = await extractResult(res)
+    const headers: Obj = [...res.headers.entries()].reduce((r, pair) => {
+      const [key, val] = pair.map(v => v.toLowerCase())
+      return Object.assign(r, {[key]: val})
+    }, {})
+    const contentHeader = headers[contentType]
+    const data: any = await (regex.json.test(contentHeader)
+      ? res.json()
+      : regex.file.test(contentHeader) ? res.blob() : res.text())
     const { status } = res
-    const pong = { data, status }
+    const result = { status, data }
 
     return status >= 400
-      ? produceError({ message: res.statusText }, pong)
-      : data?.data === void 0 ? { status, data } : { status, ...data }
+      ? produceError({ message: res.statusText }, result)
+      : data?.data === void 0 ? result : { status, ...data }
   } catch (err) {
     return produceError(err)
   }
