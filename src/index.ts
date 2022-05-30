@@ -47,7 +47,7 @@ function buildReq(name: string, props: Obj, method: FetchMethod): ReqProps {
   const collection: CollectionOptions = META.collections[name]
   const { params, special } = splitProps(props)
   const hash = `${name}+++${JSON.stringify(params)}`
-  const body = special.$body || { ...collection.props, ...props }
+  const body = special.$body || { ...collection.props, ...params }
   const multi = Array.isArray(collection.collections) && Boolean(collection.collections.length)
   const options = {
     ...META.options,

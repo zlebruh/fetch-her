@@ -79,7 +79,7 @@ function buildReq(name, props, method) {
     const collection = META.collections[name];
     const { params, special } = (0, utils_1.splitProps)(props);
     const hash = `${name}+++${JSON.stringify(params)}`;
-    const body = special.$body || Object.assign(Object.assign({}, collection.props), props);
+    const body = special.$body || Object.assign(Object.assign({}, collection.props), params);
     const multi = Array.isArray(collection.collections) && Boolean(collection.collections.length);
     const options = Object.assign(Object.assign(Object.assign(Object.assign({}, META.options), collection.options), special.$options), { method: method || collection.method, headers: Object.assign(Object.assign(Object.assign({}, META.options.headers), collection.headers), special.$headers) });
     return { collection, body, options, props, special, name, hash, multi };
