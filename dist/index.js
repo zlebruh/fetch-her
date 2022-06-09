@@ -151,7 +151,7 @@ const Setup = (props) => {
         META.collections = collections;
     return META;
 };
-const fetchAttempt = (name, props, method) => __awaiter(void 0, void 0, void 0, function* () {
+const fetchAttempt = (name, props = {}, method) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     const reject = ((props === null || props === void 0 ? void 0 : props.$reject) || ((_b = (_a = META === null || META === void 0 ? void 0 : META.collections[name]) === null || _a === void 0 ? void 0 : _a.props) === null || _b === void 0 ? void 0 : _b.$reject)) === true;
     const _c = yield fetchOne({ name, props, method }).catch(utils_1.produceError), { $req } = _c, result = __rest(_c, ["$req"]);
