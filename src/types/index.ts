@@ -2,9 +2,9 @@ export type Obj = { [key: string]: any }
 export type FetchMethod = 'get' | 'put' | 'post' | 'patch' | 'delete'
 
 export type PrefetchProps = {
-  req?: ReqProps;
-  url?: string;
-  problems?: string[];
+  req: ReqProps;
+  url: string;
+  problems: string[];
 }
 export type FetchProps = {
   name: string;

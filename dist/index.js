@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -57,23 +61,19 @@ function buildInfo(fetchProps) {
     const { name, props } = fetchProps;
     const collection = META.collections[name];
     const method = (fetchProps.method || (collection === null || collection === void 0 ? void 0 : collection.method) || '').toUpperCase();
-    const { ok, problems } = verifyInfo({ name, method, url: collection === null || collection === void 0 ? void 0 : collection.url });
-    if (!ok)
-        return { problems };
+    const problems = verifyInfo({ name, method, url: collection === null || collection === void 0 ? void 0 : collection.url });
     const req = buildReq(name, props, method);
     const url = buildURL(req, method);
-    return { req, url };
+    return { req, url, problems };
 }
 function verifyInfo(info) {
-    const problems = Object.keys(VERIFY)
+    return Object.keys(VERIFY)
         .map((key) => {
         const { test, text } = VERIFY[key];
         return !(0, utils_1.isString)(info[key], true) || !(test ? test(info.name) : true)
             ? text.replace('{{value}}', info.name)
             : null;
-    })
-        .filter(v => v);
-    return { ok: !problems.length, problems };
+    }).filter(Boolean);
 }
 function buildReq(name, props, method) {
     const collection = META.collections[name];
@@ -84,6 +84,7 @@ function buildReq(name, props, method) {
     const options = Object.assign(Object.assign(Object.assign(Object.assign({}, META.options), collection.options), special.$options), { method: method || collection.method, headers: Object.assign(Object.assign(Object.assign({}, META.options.headers), collection.headers), special.$headers) });
     return { collection, body, options, props, special, name, hash, multi };
 }
+// TODO: Started throwing compile errors after updating TS // const initiateRequest = (req: ReqProps, url: string) => {
 const initiateRequest = (req, url) => {
     const { collection, options, props, body } = req;
     if (options.method !== 'GET') {
@@ -130,7 +131,7 @@ const fetchOne = (fetchProps) => {
 };
 const fetchMultiple = (req) => __awaiter(void 0, void 0, void 0, function* () {
     const { collections = [] } = req.collection;
-    const list = collections.map((name) => fetchOne({ name, props: req.props[name] }));
+    const list = collections.map((name) => fetchAttempt(name, req.props[name]));
     const data = yield Promise.all(list);
     return collections.reduce((result, name, idx) => (Object.assign(Object.assign({}, result), { [name]: data[idx] })), {});
 });

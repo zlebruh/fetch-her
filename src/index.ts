@@ -21,26 +21,20 @@ function buildInfo(fetchProps: FetchProps): PrefetchProps {
   const { name, props } = fetchProps
   const collection = META.collections[name]
   const method = (fetchProps.method || collection?.method || '').toUpperCase()
-  const { ok, problems } = verifyInfo({ name, method, url: collection?.url })
-
-  if (!ok) return { problems }
-
+  const problems = verifyInfo({ name, method, url: collection?.url })
   const req = buildReq(name, props, method)
   const url = buildURL(req, method)
-  
-  return { req, url }
+
+  return { req, url, problems }
 }
 function verifyInfo(info: Obj) {
-  const problems = Object.keys(VERIFY)
+  return Object.keys(VERIFY)
     .map((key) => {
       const { test, text } = VERIFY[key]
       return !isString(info[key], true) || !(test ? test(info.name) : true)
         ? text.replace('{{value}}', info.name)
         : null
-    })
-    .filter(v => v)
-
-  return { ok: !problems.length, problems }
+    }).filter(Boolean)
 }
 
 function buildReq(name: string, props: Obj, method: FetchMethod): ReqProps {
@@ -64,7 +58,8 @@ function buildReq(name: string, props: Obj, method: FetchMethod): ReqProps {
   return { collection, body, options, props, special, name, hash, multi }
 }
 
-const initiateRequest = (req: ReqProps, url: string) => {
+// TODO: Started throwing compile errors after updating TS // const initiateRequest = (req: ReqProps, url: string) => {
+const initiateRequest = (req: Obj, url: string) => {
   const { collection, options, props, body } = req
 
   if (options.method !== 'GET') {
@@ -115,7 +110,7 @@ const fetchOne = (fetchProps: FetchProps): Promise<any|FetchResponse> => {
 }
 const fetchMultiple = async (req: ReqProps) => {
   const { collections = [] } = req.collection
-  const list = collections.map((name: string) => fetchOne({ name, props: req.props[name] }))
+  const list = collections.map((name: string) => fetchAttempt(name, req.props[name]))
 
   const data = await Promise.all(list)
   return collections.reduce((result: Obj, name: string, idx: number) => ({ ...result, [name]: data[idx] }), {})
@@ -139,7 +134,7 @@ const Setup = (props: SetupOptions) => {
   return META
 }
 
-const fetchAttempt = async (name: string, props: Obj, method: FetchMethod) => {
+const fetchAttempt = async (name: string, props: Obj, method?: FetchMethod) => {
   const reject = (props?.$reject || META?.collections[name]?.props?.$reject) === true
   const { $req, ...result } = await fetchOne({name, props, method}).catch(produceError)
   const output = omit(result, ['$req'])
