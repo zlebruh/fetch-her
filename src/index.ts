@@ -134,7 +134,7 @@ const Setup = (props: SetupOptions) => {
   return META
 }
 
-const fetchAttempt = async (name: string, props: Obj, method?: FetchMethod) => {
+const fetchAttempt = async (name: string, props: Obj = {}, method?: FetchMethod) => {
   const reject = (props?.$reject || META?.collections[name]?.props?.$reject) === true
   const { $req, ...result } = await fetchOne({name, props, method}).catch(produceError)
   const output = omit(result, ['$req'])
