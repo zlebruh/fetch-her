@@ -22,10 +22,13 @@ function buildInfo(fetchProps: FetchProps): PrefetchProps {
   const collection = META.collections[name]
   const method = (fetchProps.method || collection?.method || '').toUpperCase()
   const problems = verifyInfo({ name, method, url: collection?.url })
+
+  if (problems.length) return { problems }
+
   const req = buildReq(name, props, method)
   const url = buildURL(req, method)
 
-  return { req, url, problems }
+  return { req, url }
 }
 function verifyInfo(info: Obj) {
   return Object.keys(VERIFY)
@@ -94,8 +97,9 @@ const fetchOne = (fetchProps: FetchProps): Promise<any|FetchResponse> => {
   try {
     const { req, url, problems } = buildInfo(fetchProps)
     const existing = fetchStore.reqHas(req?.hash)
+    const { collections = [] } = META.collections[fetchProps.name] || {}
 
-    if (req?.multi) return fetchMultiple(req)
+    if (collections.length) return fetchMultiple(collections, fetchProps.props)
     if (existing) return existing // Intercept a matching unresolved request and use its Promise
 
     const promise = problems?.length ? Promise.reject({ problems, $req: req }) : requestData(req, url)
@@ -108,9 +112,8 @@ const fetchOne = (fetchProps: FetchProps): Promise<any|FetchResponse> => {
     return Promise.reject(err)
   }
 }
-const fetchMultiple = async (req: ReqProps) => {
-  const { collections = [] } = req.collection
-  const list = collections.map((name: string) => fetchAttempt(name, req.props[name]))
+const fetchMultiple = async (collections: string[], props: Obj) => {
+  const list = collections.map((name: string) => fetchAttempt(name, props[name]))
 
   const data = await Promise.all(list)
   return collections.reduce((result: Obj, name: string, idx: number) => ({ ...result, [name]: data[idx] }), {})
