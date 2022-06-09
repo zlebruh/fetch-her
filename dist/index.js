@@ -62,9 +62,11 @@ function buildInfo(fetchProps) {
     const collection = META.collections[name];
     const method = (fetchProps.method || (collection === null || collection === void 0 ? void 0 : collection.method) || '').toUpperCase();
     const problems = verifyInfo({ name, method, url: collection === null || collection === void 0 ? void 0 : collection.url });
+    if (problems.length)
+        return { problems };
     const req = buildReq(name, props, method);
     const url = buildURL(req, method);
-    return { req, url, problems };
+    return { req, url };
 }
 function verifyInfo(info) {
     return Object.keys(VERIFY)
@@ -115,8 +117,9 @@ const fetchOne = (fetchProps) => {
     try {
         const { req, url, problems } = buildInfo(fetchProps);
         const existing = fetchStore.reqHas(req === null || req === void 0 ? void 0 : req.hash);
-        if (req === null || req === void 0 ? void 0 : req.multi)
-            return fetchMultiple(req);
+        const { collections = [] } = META.collections[fetchProps.name] || {};
+        if (collections.length)
+            return fetchMultiple(collections, fetchProps.props);
         if (existing)
             return existing; // Intercept a matching unresolved request and use its Promise
         const promise = (problems === null || problems === void 0 ? void 0 : problems.length) ? Promise.reject({ problems, $req: req }) : requestData(req, url);
@@ -129,9 +132,8 @@ const fetchOne = (fetchProps) => {
         return Promise.reject(err);
     }
 };
-const fetchMultiple = (req) => __awaiter(void 0, void 0, void 0, function* () {
-    const { collections = [] } = req.collection;
-    const list = collections.map((name) => fetchAttempt(name, req.props[name]));
+const fetchMultiple = (collections, props) => __awaiter(void 0, void 0, void 0, function* () {
+    const list = collections.map((name) => fetchAttempt(name, props[name]));
     const data = yield Promise.all(list);
     return collections.reduce((result, name, idx) => (Object.assign(Object.assign({}, result), { [name]: data[idx] })), {});
 });
