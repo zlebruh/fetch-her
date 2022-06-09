@@ -1,6 +1,6 @@
 {
   "name": "fetch-her",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Simple data fetching service for REST APIs",
   "main": "dist/index.js",
   "scripts": {
@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/zlebruh/fetch-her#readme",
   "devDependencies": {
-    "jest": "^27.4.5",
-    "typescript": "^4.5.4"
+    "jest": "^28.1.1",
+    "typescript": "^4.7.3"
   }
 }
