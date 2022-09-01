@@ -25,4 +25,3 @@ const cacheAdd = (hash, data) => add(CACHE, hash, data, 'CACHE');
 exports.cacheAdd = cacheAdd;
 const cacheRemove = (hash) => remove(CACHE, hash);
 exports.cacheRemove = cacheRemove;
-Object.assign(window, { CACHE, REQUESTS });

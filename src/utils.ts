@@ -73,7 +73,7 @@ export function emitResponse(detail: any, req: ReqProps) {
   const done = req?.special.$done || req?.collection.done
   const type = typeof done
 
-  if (type === 'string' && window) window.dispatchEvent(new CustomEvent(done, { detail }))
+  if (type === 'string' && globalThis) globalThis.dispatchEvent(new CustomEvent(done, { detail }))
   if (type === 'function') done(detail)
 
   return detail
