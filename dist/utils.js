@@ -81,8 +81,8 @@ exports.extractResponse = extractResponse;
 function emitResponse(detail, req) {
     const done = (req === null || req === void 0 ? void 0 : req.special.$done) || (req === null || req === void 0 ? void 0 : req.collection.done);
     const type = typeof done;
-    if (type === 'string' && window)
-        window.dispatchEvent(new CustomEvent(done, { detail }));
+    if (type === 'string' && globalThis)
+        globalThis.dispatchEvent(new CustomEvent(done, { detail }));
     if (type === 'function')
         done(detail);
     return detail;

@@ -146,7 +146,7 @@ const fetchAttempt = async (name: string, props: Obj, method: FetchMethod) => {
 
   if ($req) emitResponse(output, $req)
 
-  return reject ? Promise.reject(output) : output
+  return output.error === 1 && reject ? Promise.reject(output) : output
 }
 
 const proxy = new Proxy(Object.freeze({ fetch: fetchAttempt, Setup, META }), {

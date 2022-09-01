@@ -157,7 +157,7 @@ const fetchAttempt = (name, props, method) => __awaiter(void 0, void 0, void 0, 
     const output = (0, utils_1.omit)(result, ['$req']);
     if ($req)
         (0, utils_1.emitResponse)(output, $req);
-    return reject ? Promise.reject(output) : output;
+    return output.error === 1 && reject ? Promise.reject(output) : output;
 });
 const proxy = new Proxy(Object.freeze({ fetch: fetchAttempt, Setup, META }), {
     get(target, prop) {
