@@ -22,5 +22,3 @@ export const reqRemove = (hash: string) => remove(REQUESTS, hash)
 export const cacheHas = (hash: string) => CACHE[hash] || null
 export const cacheAdd = (hash: string, data: Obj) => add(CACHE, hash, data, 'CACHE')
 export const cacheRemove = (hash: string) => remove(CACHE, hash)
-
-Object.assign(window, { CACHE, REQUESTS })
